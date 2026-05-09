@@ -60,7 +60,6 @@ function handlePossibleForceLogout(data) {
     return false;
 }
 
-// 🚨 MODIFIED: Seamlessly refreshes UI and kicks user out if they are on an expired event page
 function checkEventExpirations() {
     const now = new Date();
     let needsRefresh = false;
@@ -221,7 +220,6 @@ document.querySelectorAll('.category-filter-btn').forEach(btn => {
 
 safeBind('event-search-bar', 'input', () => { applyFilters(); });
 
-// 🚨 MODIFIED: This now totally drops expired events so they are hidden from the feed
 function applyFilters() {
     const searchEl = document.getElementById('event-search-bar');
     const searchTerm = searchEl ? searchEl.value.toLowerCase() : '';
@@ -285,6 +283,9 @@ function displayEvents(events) {
         let typeIcon = e.eventType === 'Seated' ? '💺' : '🎫';
         let catBadge = e.category ? `<span class="badge bg-dark border border-secondary text-light">${e.category}</span>` : '';
 
+        // 🚨 FIXED: Enforcing exactly 2 decimal places for initial pricing display
+        const displayPrice = Number(e.price || 0).toFixed(2);
+
         return `
         <div class="col-md-4">
             <div class="card event-card h-100" data-id="${e._id}" data-title="${e.title}" data-age="${e.ageLimit || 0}" data-type="${e.eventType}" data-price="${e.price || 0}" data-start="${e.startDate}" data-end="${e.endDate}" data-loc="${e.location}">
@@ -298,7 +299,7 @@ function displayEvents(events) {
                         <div><span class="text-danger me-2">📍</span> ${e.location}</div>
                     </div>
                     <div class="d-flex justify-content-between align-items-end mt-auto pt-3 border-top" style="border-color: #262626 !important;">
-                        <div><span class="text-muted d-block" style="font-size:11px;">Starting from</span><span class="fw-bold fs-5 text-white">₹${e.price || 0}</span></div>
+                        <div><span class="text-muted d-block" style="font-size:11px;">Starting from</span><span class="fw-bold fs-5 text-white">₹${displayPrice}</span></div>
                         <button class="btn ${btnState} fw-bold px-4 rounded-3 book-now-btn">${btnText}</button>
                     </div>
                 </div>
@@ -499,6 +500,7 @@ async function renderSeatsForEvent(eventId, date, time) {
     }
 }
 
+// 🚨 FIXED: Order Summary Calculation & Display Math
 function updateOrderSummary(reset = false) {
     const checkoutBtn = document.getElementById('sidebar-checkout-btn');
     const seatsList = document.getElementById('summary-seats-list');
@@ -513,8 +515,8 @@ function updateOrderSummary(reset = false) {
         if(seatsList) seatsList.innerHTML = ''; 
         if(container) container.classList.add('d-none');
         if(calcText) calcText.innerText = `Tickets (0)`; 
-        if(subtotalText) subtotalText.innerText = '0'; 
-        totalText.innerText = '0'; checkoutBtn.disabled = true; return;
+        if(subtotalText) subtotalText.innerText = '0.00'; 
+        totalText.innerText = '0.00'; checkoutBtn.disabled = true; return;
     }
 
     let sub = 0; let count = 0;
@@ -527,22 +529,23 @@ function updateOrderSummary(reset = false) {
         count = selectedSeats.length;
         if(container) container.classList.toggle('d-none', count === 0);
         if(seatsList) seatsList.innerHTML = selectedSeats.map(s => `<span class="seat-pill">${s}</span>`).join('');
-        if(calcText) calcText.innerText = `Regular (${count} x ₹${currentEventPrice})`;
+        if(calcText) calcText.innerText = `Regular (${count} x ₹${currentEventPrice.toFixed(2)})`;
         sub = count * currentEventPrice;
         checkoutBtn.disabled = count === 0;
     } else {
         const qtyEl = document.getElementById('general-qty');
         count = parseInt(qtyEl ? qtyEl.value : 0) || 0;
         if(container) container.classList.add('d-none');
-        if(calcText) calcText.innerText = `General (${count} x ₹${currentEventPrice})`;
+        if(calcText) calcText.innerText = `General (${count} x ₹${currentEventPrice.toFixed(2)})`;
         sub = count * currentEventPrice;
         checkoutBtn.disabled = count === 0;
     }
 
-    const finalTotal = sub;
+    const finalTotal = parseFloat(sub.toFixed(2));
     finalCheckoutTotal = finalTotal; 
-    if(subtotalText) subtotalText.innerText = sub;
-    totalText.innerText = finalTotal;
+    
+    if(subtotalText) subtotalText.innerText = finalTotal.toFixed(2);
+    totalText.innerText = finalTotal.toFixed(2);
 }
 
 safeBind('seat-map', 'click', (e) => {
@@ -582,8 +585,9 @@ safeBind('sidebar-checkout-btn', 'click', () => {
         pendingPaymentData = { type: 'general', eventId: currentEventId, qty: qty, selectedDate: currentSelectedDate, timeSlot: currentSelectedTime };
     }
 
+    // 🚨 FIXED: Added toFixed(2) to secure checkout display pop up
     const amtDisplay = document.getElementById('payment-amount-display');
-    if(amtDisplay) amtDisplay.innerText = finalCheckoutTotal;
+    if(amtDisplay) amtDisplay.innerText = finalCheckoutTotal.toFixed(2);
 
     if(!paymentModalInstance) {
         const pModal = document.getElementById('paymentModal');
@@ -649,7 +653,6 @@ safeBind('nav-bookings-link', 'click', async (e) => {
             if(!acc[key]) { 
                 const hash = Math.abs(key.split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0)).toString(16).toUpperCase().substring(0, 8);
                 
-                // 🚨 MODIFIED: Store the endDate in the accumulator
                 acc[key] = { 
                     eventTitle: t.eventTitle, 
                     date: t.bookingDate, 
@@ -670,7 +673,6 @@ safeBind('nav-bookings-link', 'click', async (e) => {
             return acc;
         }, {});
 
-        // 🚨 MODIFIED: Render with EXPIRED badge and conditionally hidden cancel button
         container.innerHTML = Object.values(grouped).map(g => {
             const totalAmount = g.price * g.count;
             const dateStr = new Date(g.date).toLocaleDateString('en-GB', {weekday: 'short', day: 'numeric', month: 'short', year: 'numeric'});
@@ -692,6 +694,9 @@ safeBind('nav-bookings-link', 'click', async (e) => {
             } else {
                 seatPills = g.seats.map(s => `<span class="seat-pill-sm">${s.replace('GA-', '')}</span>`).join(' ');
             }
+
+            // 🚨 FIXED: Formatting the total price perfectly with commas and exactly 2 decimals
+            const formattedTotal = totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
             return `
             <div class="card bg-transparent border mb-4 ticket-card-ui">
@@ -725,7 +730,7 @@ safeBind('nav-bookings-link', 'click', async (e) => {
                             </div>
                             <div>
                                 <div class="text-muted mb-2" style="font-size: 12px;">Amount</div>
-                                <div class="fw-bold text-danger fs-5">₹${totalAmount.toLocaleString()}</div>
+                                <div class="fw-bold text-danger fs-5">₹${formattedTotal}</div>
                             </div>
                         </div>
                     </div>
@@ -861,6 +866,10 @@ function showTicketDetail(ticketData) {
     
     const dateStr = new Date(ticketData.date).toLocaleDateString('en-GB', {weekday: 'short', day: 'numeric', month: 'short', year: 'numeric'});
     const totalAmount = ticketData.price * ticketData.count;
+    
+    // 🚨 FIXED: Price format clamping in receipt display view
+    const formattedReceiptTotal = totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    
     const seatPills = ticketData.seats.map(s => `<span class="seat-pill-sm">${s.replace('GA-', '')}</span>`).join(' ');
     
     const usernameBadge = document.getElementById('username-badge');
@@ -915,7 +924,7 @@ function showTicketDetail(ticketData) {
             <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top border-secondary border-opacity-25">
                 <div>
                     <div class="text-muted text-uppercase fw-bold" style="font-size: 11px; letter-spacing: 1px;">Total Amount Paid</div>
-                    <div class="fw-bold text-danger fs-3">₹${totalAmount.toLocaleString()}</div>
+                    <div class="fw-bold text-danger fs-3">₹${formattedReceiptTotal}</div>
                 </div>
                 <div class="text-end">
                     <div class="text-muted text-uppercase fw-bold" style="font-size: 11px; letter-spacing: 1px;">Transaction ID</div>
@@ -1042,7 +1051,9 @@ function showTicketDetail(ticketData) {
 
             doc.setTextColor(20, 20, 20);
             doc.setFontSize(14);
-            doc.text(`INR ${totalAmount.toLocaleString()}`, 135, 86, { align: "right" });
+            
+            // 🚨 FIXED: Exact formatting inside the PDF download logic
+            doc.text(`INR ${formattedReceiptTotal}`, 135, 86, { align: "right" });
 
             // PERFORATED DIVIDER LINE
             doc.setDrawColor(180, 180, 180);
