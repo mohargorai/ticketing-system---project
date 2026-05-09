@@ -60,27 +60,25 @@ function handlePossibleForceLogout(data) {
     return false;
 }
 
+// 🚨 MODIFIED: Seamlessly refreshes UI and kicks user out if they are on an expired event page
 function checkEventExpirations() {
     const now = new Date();
+    let needsRefresh = false;
+    
     allEvents.forEach(e => {
         const isExpired = now > new Date(e.endDate);
-        const cardBtns = document.querySelectorAll(`.event-card[data-id="${e._id}"]`);
+        const cardRendered = document.querySelector(`.event-card[data-id="${e._id}"]`);
         
-        cardBtns.forEach(cardBtn => {
-            if (isExpired && !cardBtn.classList.contains('expired-card')) {
-                cardBtn.classList.add('expired-card');
-                const overlay = cardBtn.querySelector('.book-now-btn');
-                if(overlay) { 
-                    overlay.innerText = 'Ended'; 
-                    overlay.classList.replace('btn-danger', 'btn-secondary'); 
-                }
-                if (currentEventId === String(e._id)) {
-                    alert("⏳ Time's up! This event has officially ended.");
-                    switchView('booking-section');
-                }
+        if (isExpired && cardRendered) {
+            needsRefresh = true; 
+            if (currentEventId === String(e._id)) {
+                alert("⏳ Time's up! This event has officially ended.");
+                switchView('booking-section');
             }
-        });
+        }
     });
+    
+    if (needsRefresh) applyFilters(); 
 }
 setInterval(checkEventExpirations, 10000);
 
@@ -223,11 +221,16 @@ document.querySelectorAll('.category-filter-btn').forEach(btn => {
 
 safeBind('event-search-bar', 'input', () => { applyFilters(); });
 
+// 🚨 MODIFIED: This now totally drops expired events so they are hidden from the feed
 function applyFilters() {
     const searchEl = document.getElementById('event-search-bar');
     const searchTerm = searchEl ? searchEl.value.toLowerCase() : '';
+    const now = new Date();
     
     const filteredEvents = allEvents.filter(ev => {
+        // Completely exclude expired events
+        if (now > new Date(ev.endDate)) return false; 
+        
         const safeTitle = ev.title ? ev.title.toLowerCase() : '';
         const safeLoc = ev.location ? ev.location.toLowerCase() : '';
         
@@ -646,6 +649,7 @@ safeBind('nav-bookings-link', 'click', async (e) => {
             if(!acc[key]) { 
                 const hash = Math.abs(key.split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0)).toString(16).toUpperCase().substring(0, 8);
                 
+                // 🚨 MODIFIED: Store the endDate in the accumulator
                 acc[key] = { 
                     eventTitle: t.eventTitle, 
                     date: t.bookingDate, 
@@ -656,7 +660,8 @@ safeBind('nav-bookings-link', 'click', async (e) => {
                     count: 0, 
                     seats: [], 
                     ids: [],
-                    bookingRef: `BKM${hash}D1`
+                    bookingRef: `BKM${hash}D1`,
+                    endDate: t.endDate 
                 }; 
             }
             acc[key].count++; 
@@ -665,10 +670,21 @@ safeBind('nav-bookings-link', 'click', async (e) => {
             return acc;
         }, {});
 
+        // 🚨 MODIFIED: Render with EXPIRED badge and conditionally hidden cancel button
         container.innerHTML = Object.values(grouped).map(g => {
             const totalAmount = g.price * g.count;
             const dateStr = new Date(g.date).toLocaleDateString('en-GB', {weekday: 'short', day: 'numeric', month: 'short', year: 'numeric'});
             
+            const isExpired = new Date() > new Date(g.endDate); 
+            
+            const statusBadge = isExpired 
+                ? `<span class="badge bg-secondary text-light" style="font-size: 10px; border-radius: 6px; padding: 4px 8px; letter-spacing: 1px;">EXPIRED</span>`
+                : `<span class="badge" style="background-color: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); font-size: 10px; border-radius: 6px; padding: 4px 8px;">confirmed</span>`;
+            
+            const cancelBtnHtml = isExpired 
+                ? `` 
+                : `<button class="btn btn-link text-danger p-0 mt-2 small text-decoration-none cancel-ticket-btn" data-json="${encodeURIComponent(JSON.stringify(g.ids))}" style="font-size: 12px; opacity: 0.8;">Cancel</button>`;
+
             let seatPills = '';
             if (g.seats.length > 15) {
                 seatPills = g.seats.slice(0, 15).map(s => `<span class="seat-pill-sm">${s.replace('GA-', '')}</span>`).join(' ') +
@@ -690,11 +706,11 @@ safeBind('nav-bookings-link', 'click', async (e) => {
                         <div class="d-flex justify-content-between align-items-start mb-3">
                             <div class="d-flex align-items-center flex-wrap gap-2">
                                 <h5 class="fw-bold mb-0 text-white">${g.eventTitle}</h5>
-                                <span class="badge" style="background-color: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); font-size: 10px; border-radius: 6px; padding: 4px 8px;">confirmed</span>
+                                ${statusBadge}
                             </div>
                             <div class="d-flex flex-column align-items-end">
                                 <button class="btn btn-link text-white fw-bold p-0 m-0 text-decoration-none view-ticket-btn" data-ticket="${encodeURIComponent(JSON.stringify(g))}">View Ticket &gt;</button>
-                                <button class="btn btn-link text-danger p-0 mt-2 small text-decoration-none cancel-ticket-btn" data-json="${encodeURIComponent(JSON.stringify(g.ids))}" style="font-size: 12px; opacity: 0.8;">Cancel</button>
+                                ${cancelBtnHtml}
                             </div>
                         </div>
                         <div class="text-muted small mb-4 d-flex flex-column gap-2" style="font-size: 13px;">
