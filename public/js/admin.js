@@ -66,7 +66,8 @@ async function loadAnalytics() {
         const data = await res.json();
         
         if(data.success) {
-            document.getElementById('stat-revenue').innerText = data.totalRevenue.toLocaleString();
+            // 🚨 FIXED: Formatting exact revenue with commas and clamping to 2 decimal places
+            document.getElementById('stat-revenue').innerText = data.totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             document.getElementById('stat-tickets').innerText = data.totalTicketsSold.toLocaleString();
             document.getElementById('stat-events').innerText = data.totalEvents.toLocaleString();
             document.getElementById('stat-users').innerText = data.totalUsers.toLocaleString();
@@ -130,7 +131,8 @@ function renderChart(eventStats) {
                     cornerRadius: 8,
                     callbacks: {
                         label: function(context) {
-                            return 'Revenue: ₹' + context.parsed.y.toLocaleString();
+                            // 🚨 FIXED: Formatting exact chart tooltip values
+                            return 'Revenue: ₹' + context.parsed.y.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                         }
                     }
                 }
