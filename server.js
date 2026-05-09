@@ -8,7 +8,7 @@ const path = require('path');
 const http = require('http');               
 const { Server } = require('socket.io');  
 const compression = require('compression'); 
-const redis = require('redis'); // 🚨 NEW: Redis Library
+const redis = require('redis'); 
 require('dotenv').config();                 
 
 const User = require('./models/User'); 
@@ -165,16 +165,13 @@ app.put('/api/profile', verifyActiveUser, async (req, res) => {
 // ==========================================
 app.get('/api/events', async (req, res) => {
     try {
-        // 1. Check Redis Cache First
         if (isRedisConnected) {
             const cachedEvents = await redisClient.get('events_cache');
-            if (cachedEvents) return res.json(JSON.parse(cachedEvents)); // ⚡ Super fast return
+            if (cachedEvents) return res.json(JSON.parse(cachedEvents)); 
         }
 
-        // 2. Fetch from DB if Cache is empty
         const events = await Event.find().sort({ startDate: 1 }).lean(); 
 
-        // 3. Save to Cache for 1 Hour (3600 seconds)
         if (isRedisConnected) {
             await redisClient.setEx('events_cache', 3600, JSON.stringify(events));
         }
@@ -219,7 +216,7 @@ app.get('/api/seats/:eventId', async (req, res) => {
 });
 
 // ==========================================
-// 🛒 CORE BOOKING LOGIC (CACHE INVALIDATION)
+// 🛒 CORE BOOKING LOGIC 
 // ==========================================
 app.post('/api/events/book-seats', verifyActiveUser, async (req, res) => {
     const { eventId, seats, selectedDate, timeSlot } = req.body; 
@@ -229,7 +226,7 @@ app.post('/api/events/book-seats', verifyActiveUser, async (req, res) => {
         await Seat.insertMany(seatsToInsert, { ordered: true });
         event.ticketsSold += seats.length; await event.save();
         
-        clearEventsCache(); // 🚨 Invalidate cache so new ticketsSold counts show on frontend
+        clearEventsCache(); 
         io.emit('seatUpdate', { eventId, date: selectedDate, timeSlot }); io.emit('dashboardUpdate'); 
         res.json({ success: true, message: `Successfully booked ${seats.length} seat(s)!` });
     } catch (err) { res.status(400).json({ success: false, message: "Seat snatched! Please refresh." }); }
@@ -248,15 +245,26 @@ app.post('/api/events/book-general', verifyActiveUser, async (req, res) => {
         await Seat.insertMany(tickets);
         event.ticketsSold += Number(qty); await event.save();
 
-        clearEventsCache(); // 🚨 Invalidate Cache
+        clearEventsCache(); 
         io.emit('seatUpdate', { eventId, date: selectedDate, timeSlot }); io.emit('dashboardUpdate'); 
         res.json({ success: true, message: `Successfully booked ${qty} ticket(s)!` });
     } catch (err) { res.status(500).json({ success: false, message: "Booking error." }); }
 });
 
+// 🚨 MODIFIED: Now returning endDate so frontend history can determine expiration
 app.get('/api/my-tickets', verifyActiveUser, async (req, res) => {
     const mySeats = await Seat.find({ $or: [{ userId: req.session.userId }, { bookedBy: req.session.username }] }).populate('eventId', '-imageUrl').lean();
-    res.json(mySeats.filter(s => s.eventId).map(seat => ({ eventId: seat.eventId._id, eventTitle: seat.eventId.title, bookingDate: seat.bookingDate, timeSlot: seat.timeSlot, location: seat.eventId.location, eventType: seat.eventId.eventType, price: seat.eventId.price || 0, seatId: seat.seatId })));
+    res.json(mySeats.filter(s => s.eventId).map(seat => ({ 
+        eventId: seat.eventId._id, 
+        eventTitle: seat.eventId.title, 
+        bookingDate: seat.bookingDate, 
+        timeSlot: seat.timeSlot, 
+        location: seat.eventId.location, 
+        eventType: seat.eventId.eventType, 
+        price: seat.eventId.price || 0, 
+        seatId: seat.seatId,
+        endDate: seat.eventId.endDate 
+    })));
 });
 
 app.post('/api/events/cancel-booking', verifyActiveUser, async (req, res) => {
@@ -265,7 +273,7 @@ app.post('/api/events/cancel-booking', verifyActiveUser, async (req, res) => {
         const result = await Seat.findOneAndDelete({ eventId, seatId, bookingDate, timeSlot, $or: [{ userId: req.session.userId }, { bookedBy: req.session.username }] });
         if (result) {
             const event = await Event.findById(eventId); event.ticketsSold = Math.max(0, event.ticketsSold - 1); await event.save();
-            clearEventsCache(); // 🚨 Invalidate Cache
+            clearEventsCache(); 
             io.emit('seatUpdate', { eventId, date: bookingDate, timeSlot }); io.emit('dashboardUpdate');
             res.json({ success: true, message: "Cancelled." });
         } else res.status(400).json({ success: false, message: "Ticket not found." });
