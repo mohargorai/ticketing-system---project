@@ -39,7 +39,6 @@ let isRedisConnected = false;
     });
 
     redisClient.on('connect', () => {
-        console.log('🟢 Connected to Redis Cache');
         isRedisConnected = true;
     });
 
@@ -91,7 +90,6 @@ app.use(session({
 
 mongoose.connect(DB_URI)
     .then(async () => {
-        console.log('✅ Connected to MongoDB');
         await User.syncIndexes(); await Seat.syncIndexes();
     }).catch(err => console.error('❌ MongoDB Connection Error:', err));
 
@@ -221,10 +219,9 @@ app.get('/api/seats/:eventId', async (req, res) => {
 app.post('/api/events/book-seats', verifyActiveUser, async (req, res) => {
     const { eventId, seats, selectedDate, timeSlot } = req.body; 
     try {
-        const event = await Event.findById(eventId);
         const seatsToInsert = seats.map(seatId => ({ eventId, seatId, bookingDate: selectedDate, timeSlot, status: 'Booked', bookedBy: req.session.username, userId: req.session.userId }));
         await Seat.insertMany(seatsToInsert, { ordered: true });
-        event.ticketsSold += seats.length; await event.save();
+        await Event.findByIdAndUpdate(eventId, { $inc: { ticketsSold: seats.length } });
         
         clearEventsCache(); 
         io.emit('seatUpdate', { eventId, date: selectedDate, timeSlot }); io.emit('dashboardUpdate'); 
@@ -235,7 +232,8 @@ app.post('/api/events/book-seats', verifyActiveUser, async (req, res) => {
 app.post('/api/events/book-general', verifyActiveUser, async (req, res) => {
     const { eventId, qty, selectedDate, timeSlot } = req.body;
     try {
-        const event = await Event.findById(eventId);
+        const event = await Event.findById(eventId).select('capacity').lean();
+        if (!event) return res.status(404).json({ success: false, message: "Event not found." });
         const currentSold = await Seat.countDocuments({ eventId, bookingDate: selectedDate, timeSlot });
         if (currentSold + Number(qty) > event.capacity) return res.status(400).json({ success: false, message: "Not enough tickets." });
 
@@ -243,7 +241,7 @@ app.post('/api/events/book-general', verifyActiveUser, async (req, res) => {
             eventId: event._id, seatId: `GA-${Math.random().toString(36).substring(2, 8).toUpperCase()}-${i+1}`, bookingDate: selectedDate, timeSlot, status: 'Booked', bookedBy: req.session.username, userId: req.session.userId 
         }));
         await Seat.insertMany(tickets);
-        event.ticketsSold += Number(qty); await event.save();
+        await Event.findByIdAndUpdate(eventId, { $inc: { ticketsSold: Number(qty) } });
 
         clearEventsCache(); 
         io.emit('seatUpdate', { eventId, date: selectedDate, timeSlot }); io.emit('dashboardUpdate'); 
@@ -272,7 +270,7 @@ app.post('/api/events/cancel-booking', verifyActiveUser, async (req, res) => {
         const { eventId, seatId, bookingDate, timeSlot } = req.body;
         const result = await Seat.findOneAndDelete({ eventId, seatId, bookingDate, timeSlot, $or: [{ userId: req.session.userId }, { bookedBy: req.session.username }] });
         if (result) {
-            const event = await Event.findById(eventId); event.ticketsSold = Math.max(0, event.ticketsSold - 1); await event.save();
+            await Event.findByIdAndUpdate(eventId, { $inc: { ticketsSold: -1 } });
             clearEventsCache(); 
             io.emit('seatUpdate', { eventId, date: bookingDate, timeSlot }); io.emit('dashboardUpdate');
             res.json({ success: true, message: "Cancelled." });
@@ -321,4 +319,4 @@ app.delete('/api/admin/users/:id', requireAdmin, async (req, res) => {
     } catch (err) { res.status(500).json({ success: false, message: "Error" }); }
 });
 
-server.listen(PORT, '0.0.0.0', () => { console.log(`Server running on port ${PORT} bound to 0.0.0.0`); });
+server.listen(PORT, '0.0.0.0');
