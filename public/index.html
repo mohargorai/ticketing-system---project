@@ -17,10 +17,16 @@
     <nav class="navbar navbar-expand-lg border-bottom position-relative py-3" style="border-color: #262626 !important;">
         <div class="container-fluid px-3 px-lg-5">
             
-            <a href="#" id="home-logo" class="navbar-brand text-white fw-bold d-flex align-items-center gap-2" style="z-index: 10;">
-                <div class="bg-danger text-white rounded d-flex align-items-center justify-content-center" style="width: 28px; height: 28px; font-size: 14px;">🎟️</div>
-                TicketHub
-            </a>
+            <div class="d-flex align-items-center gap-4" style="z-index: 10;">
+                <a href="#" id="home-logo" class="navbar-brand text-white fw-bold d-flex align-items-center gap-2">
+                    <div class="bg-danger text-white rounded d-flex align-items-center justify-content-center" style="width: 28px; height: 28px; font-size: 14px;">🎟️</div>
+                    TicketHub
+                </a>
+                
+                <button class="btn btn-dark border-secondary rounded-pill d-flex align-items-center gap-2 py-1 px-3" data-bs-toggle="modal" data-bs-target="#locationModal" style="background: rgba(255,255,255,0.05); transition: all 0.3s var(--ease-bouncy);">
+                    <span class="fs-6">📍</span> <span id="nav-location-display" class="fw-bold text-white" style="font-size: 13px;">Select City</span>
+                </button>
+            </div>
 
             <button class="navbar-toggler border-0 shadow-none px-0" type="button" data-bs-toggle="collapse" data-bs-target="#mobileNavbar" aria-expanded="false" style="filter: invert(1);">
                 <span class="navbar-toggler-icon"></span>
@@ -190,6 +196,23 @@
             </div>
         </div>
     </article>
+
+    <div class="modal fade" id="locationModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg">
+                <div class="modal-header border-bottom border-secondary pb-3">
+                    <h5 class="modal-title fw-bold text-white">📍 Select Your City</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" id="close-location-modal"></button>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <p class="text-muted small mb-4">Choose your location to see events happening near you.</p>
+                    <div id="dynamic-location-pills" class="d-flex flex-wrap justify-content-center gap-2 mb-2">
+                        <span class="spinner-border spinner-border-sm text-muted"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
         <div class="modal-dialog modal-dialog-centered">

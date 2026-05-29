@@ -20,6 +20,8 @@ let paymentModalInstance = null;
 let finalCheckoutTotal = 0;
 let cancelModalInstance = null; 
 
+let currentLocationFilter = localStorage.getItem('userCity') || 'All Cities';
+
 let initialEventsPromise = fetch(`/api/events?t=${new Date().getTime()}`)
     .then(res => res.ok ? res.json() : [])
     .catch(() => []);
@@ -86,6 +88,7 @@ async function refreshGlobalEvents() {
         const res = await fetch(`/api/events?t=${new Date().getTime()}`);
         if (res.ok) {
             allEvents = await res.json(); 
+            renderLocationModal();
             checkEventExpirations(); 
             applyFilters();
         }
@@ -234,10 +237,70 @@ function applyFilters() {
         
         const matchesSearch = safeTitle.includes(searchTerm) || safeLoc.includes(searchTerm);
         const matchesCategory = currentCategoryFilter === 'All' || ev.category === currentCategoryFilter;
-        return matchesSearch && matchesCategory;
+        
+        // Location Filter Logic (Checks if the city string is inside the location field)
+        const matchesLocation = currentLocationFilter === 'All Cities' || safeLoc.includes(currentLocationFilter.toLowerCase());
+
+        return matchesSearch && matchesCategory && matchesLocation;
     });
     displayEvents(filteredEvents);
 }
+
+// ==========================================
+// 📍 DYNAMIC LOCATION LOGIC
+// ==========================================
+function extractUniqueCities(events) {
+    const cities = new Set();
+    events.forEach(e => {
+        if (e.location) {
+            const parts = e.location.split(',');
+            const city = parts[parts.length - 1].trim();
+            if (city) cities.add(city);
+        }
+    });
+    return Array.from(cities).sort();
+}
+
+function renderLocationModal() {
+    const cities = extractUniqueCities(allEvents);
+    const container = document.getElementById('dynamic-location-pills');
+    const displayEl = document.getElementById('nav-location-display');
+    if (displayEl) displayEl.innerText = currentLocationFilter;
+    
+    if (!container) return;
+    
+    let html = `<button class="btn ${currentLocationFilter === 'All Cities' ? 'btn-danger border-danger text-white' : 'btn-outline-secondary border-dark text-white'} rounded-pill px-4 fw-bold location-pill" data-city="All Cities">All Cities</button>`;
+    
+    cities.forEach(city => {
+        const isActive = currentLocationFilter === city;
+        const classes = isActive ? 'btn-danger border-danger text-white' : 'btn-outline-secondary border-dark text-white';
+        html += `<button class="btn ${classes} rounded-pill px-4 fw-bold location-pill" data-city="${city}">${city}</button>`;
+    });
+    
+    container.innerHTML = html;
+    
+    document.querySelectorAll('.location-pill').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            currentLocationFilter = e.target.getAttribute('data-city');
+            localStorage.setItem('userCity', currentLocationFilter);
+            if (displayEl) displayEl.innerText = currentLocationFilter;
+            
+            document.getElementById('close-location-modal')?.click();
+            renderLocationModal();
+            applyFilters();
+        });
+    });
+}
+
+// Trigger modal on first load if no city selected
+window.addEventListener('DOMContentLoaded', () => {
+    if (!localStorage.getItem('userCity')) {
+        setTimeout(() => {
+            const btn = document.querySelector('[data-bs-target="#locationModal"]');
+            if(btn) btn.click();
+        }, 800);
+    }
+});
 
 async function renderEvents() {
     const container = document.getElementById('events-container');
@@ -261,11 +324,11 @@ async function renderEvents() {
     if (initialEventsPromise) {
         allEvents = await initialEventsPromise; 
         initialEventsPromise = null; 
+        renderLocationModal();
         checkEventExpirations(); 
         applyFilters(); 
     } else {
         await refreshGlobalEvents(); 
-        applyFilters(); 
     }
 }
 

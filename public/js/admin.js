@@ -61,6 +61,12 @@ document.getElementById('event-poster-file').addEventListener('change', function
 
 
 async function loadAnalytics() {
+    // 🚨 Inject Skeleton Loaders
+    document.getElementById('stat-revenue').innerHTML = '<span class="spinner-border spinner-border-sm text-muted"></span>';
+    document.getElementById('stat-tickets').innerHTML = '<span class="spinner-border spinner-border-sm text-muted"></span>';
+    document.getElementById('stat-events').innerHTML = '<span class="spinner-border spinner-border-sm text-muted"></span>';
+    document.getElementById('stat-users').innerHTML = '<span class="spinner-border spinner-border-sm text-muted"></span>';
+
     try {
         const res = await fetch(`/api/admin/analytics?t=${Date.now()}`);
         const data = await res.json();
@@ -169,10 +175,24 @@ function renderChart(eventStats) {
 }
 
 async function loadEvents() {
+    const container = document.getElementById('event-list-container');
+    
+    // 🚨 Inject Event List Skeletons
+    container.innerHTML = Array(3).fill(`
+        <div class="admin-event-row rounded mb-2 skeleton-card" style="border-color: var(--border-color);">
+            <div class="d-flex align-items-center flex-grow-1 w-100">
+                <div class="skeleton-img" style="width: 64px; height: 64px; border-radius: 12px; border: none; flex-shrink: 0;"></div>
+                <div class="ms-3 w-100">
+                    <div class="skeleton-text w-50 mb-2"></div>
+                    <div class="skeleton-text w-25"></div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+
     try {
         const res = await fetch(`/api/admin/events?t=${Date.now()}`);
         const events = await res.json();
-        const container = document.getElementById('event-list-container');
 
         if (events.length === 0) {
             container.innerHTML = '<div class="text-center text-muted py-5 border rounded" style="border-color: #262626 !important; background-color: var(--surface-card);">No events found.</div>';
@@ -265,10 +285,20 @@ async function loadEvents() {
 }
 
 async function loadUsers() {
+    const tbody = document.getElementById('user-table-body');
+    
+    // 🚨 Inject User List Skeletons
+    tbody.innerHTML = Array(4).fill(`
+        <tr>
+            <td class="ps-4 py-3"><div class="skeleton-text w-50"></div></td>
+            <td class="py-3"><div class="skeleton-text w-25"></div></td>
+            <td class="text-end pe-4 py-3"><div class="skeleton-text w-25 ms-auto"></div></td>
+        </tr>
+    `).join('');
+
     try {
         const res = await fetch(`/api/admin/users?t=${Date.now()}`);
         const users = await res.json();
-        const tbody = document.getElementById('user-table-body');
 
         if (users.length === 0) {
             tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No users found.</td></tr>';
