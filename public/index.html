@@ -206,39 +206,24 @@
                 </div>
                 <div class="modal-body p-4 p-md-5 text-start">
                     
-                    <!-- Search Bar -->
+                    <!-- Search Bar & Suggestions -->
                     <div class="mb-4 position-relative">
                         <span class="position-absolute text-muted" style="left: 15px; top: 12px;">🔍</span>
-                        <input type="text" id="city-search-input" class="form-control bg-transparent text-white border-secondary rounded-3" placeholder="Search city, area or locality" style="padding-left: 45px; height: 48px;">
+                        <input type="text" id="city-search-input" class="form-control bg-transparent text-white border-secondary rounded-3" placeholder="Search city, area or locality" style="padding-left: 45px; height: 48px;" autocomplete="off">
+                        
+                        <!-- Suggestions Dropdown -->
+                        <div id="city-suggestions-container" class="position-absolute w-100 d-none" style="top: 100%; left: 0; z-index: 1060; background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 8px; margin-top: 5px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-height: 250px; overflow-y: auto;">
+                            <!-- Dynamically populated via JS -->
+                        </div>
                     </div>
                     
                     <!-- Use Current Location -->
                     <button id="use-geolocation-btn" class="btn btn-link text-primary text-decoration-none fw-bold p-0 mb-4 d-flex align-items-center gap-2">
                         <span>🎯</span> <span id="geolocation-text">Use Current Location</span>
                     </button>
-                    
-                    <!-- Popular Cities Grid -->
-                    <h6 class="text-muted fw-bold mb-3 small text-uppercase">Popular Cities</h6>
-                    <div id="popular-cities-grid" class="d-flex flex-wrap gap-3 mb-5">
-                        <button class="btn btn-outline-secondary border-dark rounded-3 px-3 py-2 fw-bold text-white d-flex flex-column align-items-center gap-2 location-pill" data-city="Mumbai" style="width: 100px;">
-                            <span class="fs-4">🏛️</span> Mumbai
-                        </button>
-                        <button class="btn btn-outline-secondary border-dark rounded-3 px-3 py-2 fw-bold text-white d-flex flex-column align-items-center gap-2 location-pill" data-city="Delhi NCR" style="width: 100px;">
-                            <span class="fs-4">🕌</span> Delhi NCR
-                        </button>
-                        <button class="btn btn-outline-secondary border-dark rounded-3 px-3 py-2 fw-bold text-white d-flex flex-column align-items-center gap-2 location-pill" data-city="Bengaluru" style="width: 100px;">
-                            <span class="fs-4">🏢</span> Bengaluru
-                        </button>
-                        <button class="btn btn-outline-secondary border-dark rounded-3 px-3 py-2 fw-bold text-white d-flex flex-column align-items-center gap-2 location-pill" data-city="Hyderabad" style="width: 100px;">
-                            <span class="fs-4">🏰</span> Hyderabad
-                        </button>
-                        <button class="btn btn-outline-secondary border-dark rounded-3 px-3 py-2 fw-bold text-white d-flex flex-column align-items-center gap-2 location-pill" data-city="Chennai" style="width: 100px;">
-                            <span class="fs-4">🛕</span> Chennai
-                        </button>
-                    </div>
 
-                    <!-- All Cities List -->
-                    <h6 class="text-muted fw-bold mb-3 small text-uppercase">All Cities</h6>
+                    <!-- All Cities List (Fallback/Available Cities) -->
+                    <h6 class="text-muted fw-bold mb-3 small text-uppercase mt-2">Available Event Cities</h6>
                     <div id="dynamic-location-pills" class="d-flex flex-wrap gap-2 mb-2">
                         <span class="spinner-border spinner-border-sm text-muted"></span>
                     </div>

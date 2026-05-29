@@ -308,17 +308,8 @@ function renderLocationModal() {
     
     container.innerHTML = html;
     
-    // Attach to ALL location-pill elements (both dynamic and popular)
+    // Attach to ALL location-pill elements
     document.querySelectorAll('.location-pill').forEach(btn => {
-        // Highlight active popular city visually if needed
-        if(btn.closest('#popular-cities-grid')) {
-            if(btn.getAttribute('data-city') === currentLocationFilter) {
-                btn.classList.replace('btn-outline-secondary', 'btn-danger');
-            } else {
-                btn.classList.replace('btn-danger', 'btn-outline-secondary');
-            }
-        }
-        
         btn.addEventListener('click', (e) => {
             const clickedBtn = e.target.closest('.location-pill');
             if(!clickedBtn) return;
@@ -379,16 +370,82 @@ safeBind('use-geolocation-btn', 'click', () => {
     });
 });
 
-// City Search Bar Logic
+// City Search Bar Logic & Autocomplete Suggestions
+let searchTimeout;
 safeBind('city-search-input', 'input', (e) => {
-    const term = e.target.value.toLowerCase();
+    const term = e.target.value.trim();
+    const container = document.getElementById('city-suggestions-container');
+    
+    // Fallback: still filter the bottom available cities pills
     document.querySelectorAll('#dynamic-location-pills .location-pill').forEach(btn => {
-        if(btn.innerText.toLowerCase().includes(term)) {
+        if(btn.innerText.toLowerCase().includes(term.toLowerCase())) {
             btn.classList.remove('d-none');
         } else {
             btn.classList.add('d-none');
         }
     });
+
+    if (term.length < 2) {
+        if (container) container.classList.add('d-none');
+        return;
+    }
+
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(async () => {
+        try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(term)}&format=json&addressdetails=1&limit=5`);
+            const data = await res.json();
+            
+            if (data.length > 0 && container) {
+                let html = '';
+                data.forEach(place => {
+                    const mainText = place.name;
+                    const subText = place.display_name.split(',').slice(1, 3).join(',').trim();
+                    const city = place.address.city || place.address.town || place.address.village || place.name;
+                    
+                    html += `
+                        <div class="suggestion-item p-3 border-bottom border-secondary" style="cursor: pointer; transition: background 0.2s;" data-city="${city}">
+                            <div class="d-flex align-items-start gap-3">
+                                <span class="text-muted mt-1">📍</span>
+                                <div>
+                                    <div class="text-white fw-bold">${mainText}</div>
+                                    <div class="text-muted small">${subText}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = html;
+                container.classList.remove('d-none');
+                
+                container.querySelectorAll('.suggestion-item').forEach(item => {
+                    item.addEventListener('mouseenter', () => item.style.background = 'rgba(255,255,255,0.05)');
+                    item.addEventListener('mouseleave', () => item.style.background = 'transparent');
+                    
+                    item.addEventListener('click', () => {
+                        const clickedCity = item.getAttribute('data-city');
+                        currentLocationFilter = clickedCity;
+                        localStorage.setItem('userCity', currentLocationFilter);
+                        
+                        const displayEl = document.getElementById('nav-location-display');
+                        if (displayEl) displayEl.innerText = currentLocationFilter;
+                        
+                        document.getElementById('city-search-input').value = '';
+                        container.classList.add('d-none');
+                        document.getElementById('close-location-modal')?.click();
+                        
+                        renderLocationModal();
+                        applyFilters();
+                    });
+                });
+            } else if (container) {
+                container.classList.add('d-none');
+            }
+        } catch (err) {
+            console.warn("Location search failed", err);
+        }
+    }, 500);
 });
 
 async function renderEvents() {
