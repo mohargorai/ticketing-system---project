@@ -123,6 +123,11 @@
                     <div class="d-flex gap-4 flex-wrap mt-2" id="selected-event-details-bar"></div>
                 </div>
                 
+                <div id="cinema-selection-container" class="card border-0 p-4 mb-4 d-none w-100">
+                    <h6 class="fw-bold text-muted text-uppercase mb-3" style="font-size: 12px; letter-spacing: 1px;">Select Cinema Hall</h6>
+                    <div id="cinema-pills" class="d-flex flex-column gap-3 m-0 border-0"></div>
+                </div>
+                
                 <div id="date-selection-container" class="card border-0 p-4 mb-4 d-none w-100">
                     <h6 class="fw-bold text-muted text-uppercase mb-3" style="font-size: 12px; letter-spacing: 1px;">Select Date & Time</h6>
                     
@@ -209,9 +214,12 @@
                     <!-- Search Bar -->
                     <div class="mb-4 position-relative">
                         <span class="position-absolute text-muted" style="left: 15px; top: 12px;">🔍</span>
-                        <input type="text" id="city-search-input" class="form-control bg-transparent text-white border-secondary rounded-3" placeholder="Search city, area or locality in India" style="padding-left: 45px; height: 48px;" autocomplete="off">
-                        <!-- Suggestions Dropdown -->
-                        <ul id="city-suggestions-list" class="list-unstyled position-absolute w-100 d-none shadow-lg" style="top: 100%; left: 0; z-index: 1050; max-height: 250px; overflow-y: auto; background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 8px; margin-top: 5px;"></ul>
+                        <input type="text" id="city-search-input" class="form-control bg-transparent text-white border-secondary rounded-3" placeholder="Search for cities in India..." style="padding-left: 45px; height: 48px;" autocomplete="off">
+                        
+                        <!-- Autocomplete Dropdown -->
+                        <div id="city-autocomplete-dropdown" class="position-absolute w-100 border border-secondary rounded-3 shadow-lg d-none" style="top: 55px; z-index: 1060; max-height: 250px; overflow-y: auto; background: var(--surface-card); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
+                            <div id="autocomplete-results" class="d-flex flex-column"></div>
+                        </div>
                     </div>
                     
                     <!-- Use Current Location -->
@@ -219,8 +227,8 @@
                         <span>🎯</span> <span id="geolocation-text">Use Current Location</span>
                     </button>
 
-                    <!-- All Cities List -->
-                    <h6 class="text-muted fw-bold mb-3 small text-uppercase">All Cities</h6>
+                    <!-- All Cities List (Active Event Cities) -->
+                    <h6 class="text-muted fw-bold mb-3 small text-uppercase">Active Event Locations</h6>
                     <div id="dynamic-location-pills" class="d-flex flex-wrap gap-2 mb-2">
                         <span class="spinner-border spinner-border-sm text-muted"></span>
                     </div>

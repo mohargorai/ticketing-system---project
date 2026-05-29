@@ -379,13 +379,14 @@ safeBind('use-geolocation-btn', 'click', () => {
     });
 });
 
-// City Search Bar Logic (Autocomplete)
-let citySearchDebounceTimer;
+// City Search Bar Logic
+let debounceTimeout;
 safeBind('city-search-input', 'input', (e) => {
     const term = e.target.value.toLowerCase().trim();
-    const suggestionsList = document.getElementById('city-suggestions-list');
+    const dropdown = document.getElementById('city-autocomplete-dropdown');
+    const resultsContainer = document.getElementById('autocomplete-results');
     
-    // Fallback: Filter existing "All Cities" list
+    // Filter active event locations
     document.querySelectorAll('#dynamic-location-pills .location-pill').forEach(btn => {
         if(btn.innerText.toLowerCase().includes(term)) {
             btn.classList.remove('d-none');
@@ -395,61 +396,74 @@ safeBind('city-search-input', 'input', (e) => {
     });
 
     if (term.length < 3) {
-        if (suggestionsList) suggestionsList.classList.add('d-none');
+        if(dropdown) dropdown.classList.add('d-none');
         return;
     }
 
-    clearTimeout(citySearchDebounceTimer);
-    citySearchDebounceTimer = setTimeout(async () => {
+    clearTimeout(debounceTimeout);
+    debounceTimeout = setTimeout(async () => {
+        if(!dropdown || !resultsContainer) return;
         try {
-            // Fetch suggestions restricted to India
-            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${term}&countrycodes=in&limit=5`);
+            dropdown.classList.remove('d-none');
+            resultsContainer.innerHTML = `<div class="p-3 text-muted small text-center"><span class="spinner-border spinner-border-sm me-2"></span>Searching...</div>`;
+            
+            // Nominatim API: Search in India
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(term)}&countrycodes=in&format=json&addressdetails=1&limit=5`);
             const data = await res.json();
             
-            if (data.length > 0 && suggestionsList) {
-                suggestionsList.innerHTML = '';
-                const uniqueCities = new Set();
-                
-                data.forEach(item => {
-                    const parts = item.display_name.split(',');
-                    const city = parts[0].trim();
-                    
-                    if (!uniqueCities.has(city)) {
-                        uniqueCities.add(city);
-                        const li = document.createElement('li');
-                        li.className = 'p-3 border-bottom border-secondary';
-                        li.style.cursor = 'pointer';
-                        li.innerHTML = `<div class="d-flex align-items-center gap-2"><span class="fs-5">📍</span><div><strong class="text-white">${city}</strong><small class="text-muted d-block" style="font-size: 11px;">${item.display_name}</small></div></div>`;
-                        
-                        li.addEventListener('click', () => {
-                            currentLocationFilter = city;
-                            localStorage.setItem('userCity', currentLocationFilter);
-                            const displayEl = document.getElementById('nav-location-display');
-                            if (displayEl) displayEl.innerText = currentLocationFilter;
-                            
-                            document.getElementById('close-location-modal')?.click();
-                            renderLocationModal();
-                            applyFilters();
-                            
-                            suggestionsList.classList.add('d-none');
-                            e.target.value = '';
-                        });
-                        
-                        // Hover effects
-                        li.addEventListener('mouseenter', () => li.style.background = 'rgba(255,255,255,0.05)');
-                        li.addEventListener('mouseleave', () => li.style.background = 'transparent');
-                        
-                        suggestionsList.appendChild(li);
-                    }
-                });
-                suggestionsList.classList.remove('d-none');
-            } else if (suggestionsList) {
-                suggestionsList.classList.add('d-none');
+            if (data.length === 0) {
+                resultsContainer.innerHTML = `<div class="p-3 text-muted small">No places found in India.</div>`;
+                return;
             }
+
+            let html = '';
+            const seenCities = new Set();
+            data.forEach(place => {
+                const city = place.address.city || place.address.town || place.address.state_district || place.name;
+                const state = place.address.state || "India";
+                
+                if (city && !seenCities.has(city)) {
+                    seenCities.add(city);
+                    html += `
+                        <div class="autocomplete-item p-3 border-bottom border-secondary hover-bg-dark" style="cursor: pointer; transition: all 0.2s;" data-city="${city}" onmouseover="this.style.backgroundColor='rgba(255,255,255,0.05)'" onmouseout="this.style.backgroundColor='transparent'">
+                            <div class="fw-bold text-white d-flex align-items-center gap-2"><span>📍</span> ${city}</div>
+                            <div class="small text-muted ms-4">${state}</div>
+                        </div>
+                    `;
+                }
+            });
+            
+            resultsContainer.innerHTML = html;
+            
+            document.querySelectorAll('.autocomplete-item').forEach(item => {
+                item.addEventListener('click', (ev) => {
+                    const selectedCity = ev.currentTarget.getAttribute('data-city');
+                    currentLocationFilter = selectedCity;
+                    localStorage.setItem('userCity', currentLocationFilter);
+                    const displayEl = document.getElementById('nav-location-display');
+                    if (displayEl) displayEl.innerText = currentLocationFilter;
+                    
+                    document.getElementById('close-location-modal')?.click();
+                    renderLocationModal();
+                    applyFilters();
+                    
+                    e.target.value = '';
+                    dropdown.classList.add('d-none');
+                });
+            });
+            
         } catch(err) {
-            console.error("Geocoding fetch failed", err);
+            resultsContainer.innerHTML = `<div class="p-3 text-danger small">Error fetching locations.</div>`;
         }
-    }, 400);
+    }, 600);
+});
+
+document.addEventListener('click', (e) => {
+    const dropdown = document.getElementById('city-autocomplete-dropdown');
+    const input = document.getElementById('city-search-input');
+    if (dropdown && !dropdown.contains(e.target) && e.target !== input) {
+        dropdown.classList.add('d-none');
+    }
 });
 
 async function renderEvents() {
@@ -490,8 +504,41 @@ function displayEvents(events) {
     }
 
     const now = new Date();
-    container.innerHTML = events.map(e => {
-        const isExpired = now > new Date(e.endDate);
+    const groupedEvents = [];
+    const movieGroups = new Map();
+
+    events.forEach(ev => {
+        if (ev.category === 'Movie') {
+            const normalizedTitle = ev.title.trim().toLowerCase();
+            if (!movieGroups.has(normalizedTitle)) {
+                movieGroups.set(normalizedTitle, {
+                    isGroup: true,
+                    title: ev.title, 
+                    category: ev.category,
+                    eventType: ev.eventType,
+                    imageUrl: ev.imageUrl,
+                    price: ev.price,
+                    subEvents: [ev]
+                });
+                groupedEvents.push(movieGroups.get(normalizedTitle));
+            } else {
+                movieGroups.get(normalizedTitle).subEvents.push(ev);
+            }
+        } else {
+            groupedEvents.push(ev);
+        }
+    });
+
+    window.currentMovieGroups = movieGroups;
+
+    container.innerHTML = groupedEvents.map(e => {
+        let isExpired = false;
+        if(e.isGroup) {
+            isExpired = e.subEvents.every(sub => now > new Date(sub.endDate));
+        } else {
+            isExpired = now > new Date(e.endDate);
+        }
+        
         const btnState = isExpired ? 'btn-secondary disabled' : 'btn-danger';
         const btnText = isExpired ? 'Ended' : 'Book Now';
         const imgHtml = e.imageUrl ? `<img src="${e.imageUrl}" class="event-card-img" alt="${e.title}">` : '<div class="event-card-img bg-dark"></div>';
@@ -500,21 +547,25 @@ function displayEvents(events) {
         let typeIcon = e.eventType === 'Seated' ? '💺' : '🎫';
         let catBadge = e.category ? `<span class="badge bg-dark border border-secondary text-light">${e.category}</span>` : '';
 
-        // 🚨 FIXED: Enforcing exactly 2 decimal places for initial pricing display
         const displayPrice = Number(e.price || 0).toFixed(2);
+        
+        let dataAttrs = `data-title="${e.title}"`;
+        let groupClass = '';
+        if(e.isGroup) {
+            groupClass = 'grouped-movie-card';
+        } else {
+            dataAttrs += ` data-id="${e._id}" data-age="${e.ageLimit || 0}" data-type="${e.eventType}" data-price="${e.price || 0}"`;
+        }
 
         return `
         <div class="col-md-4">
-            <div class="card event-card h-100" data-id="${e._id}" data-title="${e.title}" data-age="${e.ageLimit || 0}" data-type="${e.eventType}" data-price="${e.price || 0}" data-start="${e.startDate}" data-end="${e.endDate}" data-loc="${e.location}">
+            <div class="card event-card h-100 ${groupClass} ${isExpired ? 'expired-card' : ''}" ${dataAttrs}>
                 <div class="position-relative">${imgHtml}</div>
                 <div class="card-body d-flex flex-column p-4">
                     <h5 class="fw-bold mb-2 text-white">${e.title}</h5>
                     <div class="d-flex gap-2 mb-3"><span class="badge bg-dark border border-secondary ${typeColor}">${typeIcon} ${e.eventType}</span>${catBadge}</div>
-                    <p class="text-muted small mb-4">${e.description || 'Experience the ultimate event.'}</p>
-                    <div class="d-flex flex-column gap-2 mb-4 small" style="color: #a1a1aa;">
-                        <div><span class="text-danger me-2">📅</span> ${new Date(e.startDate).toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'})}</div>
-                        <div><span class="text-danger me-2">📍</span> ${e.location}</div>
-                    </div>
+                    ${e.isGroup ? `<p class="small text-danger fw-bold mb-3">📍 Multiple Cinemas Available</p>` : `<p class="small text-muted mb-3">📍 ${e.location || 'Venue TBA'}</p>`}
+                    
                     <div class="d-flex justify-content-between align-items-end mt-auto pt-3 border-top" style="border-color: #262626 !important;">
                         <div><span class="text-muted d-block" style="font-size:11px;">Starting from</span><span class="fw-bold fs-5 text-white">₹${displayPrice}</span></div>
                         <button class="btn ${btnState} fw-bold px-4 rounded-3 book-now-btn">${btnText}</button>
@@ -525,13 +576,76 @@ function displayEvents(events) {
     }).join('');
 }
 
+function showCinemaSelection(title) {
+    const normalizedTitle = title.trim().toLowerCase();
+    const group = window.currentMovieGroups?.get(normalizedTitle);
+    if (!group) return;
+    
+    const titleEl = document.getElementById('selected-event-title');
+    if(titleEl) titleEl.innerText = group.title; 
+    
+    switchView('action-section');
+    document.getElementById('seated-view')?.classList.add('d-none');
+    document.getElementById('general-view')?.classList.add('d-none');
+    document.getElementById('date-selection-container')?.classList.add('d-none');
+    
+    const cinemaContainer = document.getElementById('cinema-selection-container');
+    const cinemaPills = document.getElementById('cinema-pills');
+    if(cinemaContainer) cinemaContainer.classList.remove('d-none');
+    
+    if(cinemaPills) {
+        cinemaPills.innerHTML = group.subEvents.map(ev => {
+            const loc = ev.location || 'Unknown Location';
+            return `
+            <div class="card border border-secondary bg-dark p-3 cinema-hall-card" style="cursor: pointer; transition: all 0.3s;" data-id="${ev._id}" onmouseover="this.classList.add('border-danger')" onmouseout="this.classList.remove('border-danger')">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-white fw-bold mb-1">${loc}</h6>
+                        <span class="text-muted small">Select to view showtimes</span>
+                    </div>
+                    <span class="fs-4">🍿</span>
+                </div>
+            </div>`;
+        }).join('');
+        
+        document.querySelectorAll('.cinema-hall-card').forEach(cCard => {
+            cCard.addEventListener('click', (ev) => {
+                const selectedId = ev.currentTarget.getAttribute('data-id');
+                const selectedEvent = group.subEvents.find(e => e._id === selectedId);
+                if (selectedEvent) {
+                    cinemaContainer.classList.add('d-none');
+                    triggerStandardEventSelection(selectedEvent);
+                }
+            });
+        });
+    }
+}
+
 safeBind('events-container', 'click', async (e) => {
     const card = e.target.closest('.event-card');
     if (!card || card.classList.contains('expired-card')) return;
         
-    const requiredAge = parseInt(card.getAttribute('data-age'));
-    currentEventType = card.getAttribute('data-type');
-    currentEventPrice = parseFloat(card.getAttribute('data-price')); 
+    if (card.classList.contains('grouped-movie-card')) {
+        const title = card.getAttribute('data-title');
+        showCinemaSelection(title);
+        return;
+    }
+    
+    const eventData = {
+        _id: card.getAttribute('data-id'),
+        title: card.getAttribute('data-title'),
+        ageLimit: card.getAttribute('data-age'),
+        eventType: card.getAttribute('data-type'),
+        price: card.getAttribute('data-price')
+    };
+    
+    triggerStandardEventSelection(eventData);
+});
+
+async function triggerStandardEventSelection(eventData) {
+    const requiredAge = parseInt(eventData.ageLimit || 0);
+    currentEventType = eventData.eventType;
+    currentEventPrice = parseFloat(eventData.price || 0); 
 
     if (requiredAge > 0) {
         const res = await fetch(`/api/profile?t=${new Date().getTime()}`);
@@ -545,9 +659,9 @@ safeBind('events-container', 'click', async (e) => {
         if (userAge < requiredAge) { alert(`🛑 Access Denied!\nThis event requires age ${requiredAge}+.`); return; }
     }
 
-    currentEventId = card.getAttribute('data-id');
+    currentEventId = eventData._id;
     const titleEl = document.getElementById('selected-event-title');
-    if(titleEl) titleEl.innerText = card.getAttribute('data-title'); 
+    if(titleEl) titleEl.innerText = eventData.title; 
     
     switchView('action-section');
     document.getElementById('seated-view')?.classList.add('d-none');
