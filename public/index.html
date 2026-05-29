@@ -28,11 +28,11 @@
                 </button>
             </div>
 
-            <button class="navbar-toggler border-0 shadow-none px-0" type="button" data-bs-toggle="collapse" data-bs-target="#mobileNavbar" aria-expanded="false" style="filter: invert(1);">
+            <button class="navbar-toggler border-0 shadow-none px-0 desktop-only-nav" type="button" data-bs-toggle="collapse" data-bs-target="#mobileNavbar" aria-expanded="false" style="filter: invert(1);">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
-            <div class="collapse navbar-collapse justify-content-end" id="mobileNavbar">
+            <div class="collapse navbar-collapse justify-content-end desktop-only-nav" id="mobileNavbar">
                 <div class="d-flex flex-column flex-lg-row align-items-lg-center gap-3 mt-4 mt-lg-0" style="z-index: 10;">
                     
                     <div id="guest-display" class="d-flex flex-column flex-lg-row align-items-lg-center gap-3 w-100">
@@ -168,8 +168,8 @@
             </div>
             
             <div class="col-lg-4">
-                <div class="order-summary shadow-lg">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="order-summary shadow-lg mobile-sticky-action-bar" id="mobile-checkout-bar">
+                    <div class="d-flex justify-content-between align-items-center mb-4 d-none d-lg-flex">
                         <h5 class="fw-bold m-0 text-white">Order Summary</h5>
                     </div>
                     
@@ -178,16 +178,16 @@
                         <div id="summary-seats-list" class="d-flex flex-wrap gap-2 mt-2"></div>
                     </div>
                     
-                    <div class="d-flex justify-content-between mb-4">
+                    <div class="d-flex justify-content-between mb-4 d-none d-lg-flex">
                         <span class="text-muted small" id="summary-calc-text">Tickets (0)</span>
                         <span class="fw-bold small text-white">₹<span id="summary-subtotal">0</span></span>
                     </div>
                     
-                    <hr class="border-secondary my-3" style="opacity: 0.5;">
+                    <hr class="border-secondary my-3 d-none d-lg-block" style="opacity: 0.5;">
                     
                     <div class="d-flex justify-content-between mb-4 align-items-center">
-                        <span class="fs-5 fw-bold text-white">Total</span>
-                        <span class="fs-4 fw-bold text-danger">₹<span id="summary-total">0</span></span>
+                        <span class="fs-5 fw-bold text-white d-none d-lg-block">Total</span>
+                        <span class="fs-4 fw-bold text-danger text-lg-end w-100 w-lg-auto mb-2 mb-lg-0">₹<span id="summary-total">0</span></span>
                     </div>
                     
                     <button id="sidebar-checkout-btn" class="btn btn-primary w-100 py-3 fw-bold fs-6" disabled>Proceed to Checkout</button>
@@ -198,7 +198,7 @@
     </article>
 
     <div class="modal fade" id="locationModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-bottom modal-lg">
             <div class="modal-content shadow-lg" style="background: var(--surface-card); border-radius: var(--radius-lg);">
                 <div class="modal-header border-bottom border-secondary pb-3 pt-4 px-4">
                     <h5 class="modal-title fw-bold text-white">Select Location</h5>
@@ -333,6 +333,25 @@
     </div>
 
 </main>
+
+<nav class="mobile-bottom-nav d-none" id="bottom-navbar">
+    <a href="#" class="nav-item-mobile active" id="btn-nav-home">
+        <span class="icon">🎟️</span>
+        <span>Events</span>
+    </a>
+    <a href="#" class="nav-item-mobile" id="btn-nav-search" data-bs-toggle="modal" data-bs-target="#locationModal">
+        <span class="icon">📍</span>
+        <span>City</span>
+    </a>
+    <a href="#" class="nav-item-mobile" id="btn-nav-tickets">
+        <span class="icon">🎫</span>
+        <span>Tickets</span>
+    </a>
+    <a href="#" class="nav-item-mobile" id="btn-nav-profile">
+        <span class="icon">👤</span>
+        <span>Profile</span>
+    </a>
+</nav>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>

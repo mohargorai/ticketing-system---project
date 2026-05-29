@@ -108,8 +108,18 @@ const switchView = (viewId) => {
     }
 };
 
-safeBind('home-logo', 'click', (e) => { e.preventDefault(); switchView('booking-section'); });
-safeBind('back-to-events-btn', 'click', (e) => { e.preventDefault(); switchView('booking-section'); });
+safeBind('home-logo', 'click', (e) => { e.preventDefault(); switchView('booking-section'); updateMobileNav('btn-nav-home'); });
+safeBind('back-to-events-btn', 'click', (e) => { e.preventDefault(); switchView('booking-section'); updateMobileNav('btn-nav-home'); });
+
+// Mobile Navigation
+function updateMobileNav(activeId) {
+    document.querySelectorAll('.nav-item-mobile').forEach(el => el.classList.remove('active'));
+    document.getElementById(activeId)?.classList.add('active');
+}
+safeBind('btn-nav-home', 'click', (e) => { e.preventDefault(); switchView('booking-section'); updateMobileNav('btn-nav-home'); });
+safeBind('btn-nav-search', 'click', (e) => { e.preventDefault(); updateMobileNav('btn-nav-search'); });
+safeBind('btn-nav-tickets', 'click', (e) => { e.preventDefault(); document.getElementById('nav-bookings-link').click(); updateMobileNav('btn-nav-tickets'); });
+safeBind('btn-nav-profile', 'click', (e) => { e.preventDefault(); document.getElementById('profile-link-btn').click(); updateMobileNav('btn-nav-profile'); });
 
 const setupAuthMode = (isLogin) => {
     isLoginMode = isLogin;
@@ -119,6 +129,9 @@ const setupAuthMode = (isLogin) => {
     if (title) title.innerText = isLogin ? 'Sign In' : 'Create Account';
     if (btn) btn.innerText = isLogin ? 'Sign In' : 'Sign Up';
     switchView('auth-section');
+    
+    const bottomNav = document.getElementById('bottom-navbar');
+    if (bottomNav) bottomNav.classList.add('d-none');
 };
 
 safeBind('nav-signin-btn', 'click', (e) => { e.preventDefault(); setupAuthMode(true); });
@@ -182,6 +195,9 @@ function showBookingScreen(username, isAdmin = false) {
         locBtn.classList.remove('d-none');
         locBtn.classList.add('d-flex');
     }
+    
+    const bottomNav = document.getElementById('bottom-navbar');
+    if (bottomNav) bottomNav.classList.remove('d-none');
 
     renderEvents().then(() => {
         if (!localStorage.getItem('userCity')) {
