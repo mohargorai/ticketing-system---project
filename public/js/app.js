@@ -813,12 +813,16 @@ async function renderSeatsForEvent(eventId, date, time) {
             let rowHtml = `<div class="d-flex align-items-center justify-content-center w-100 mb-2">`;
             rowHtml += `<div class="text-end me-3 fw-bold text-muted" style="width: 15px; font-size: 11px;">${rowLetter}</div>`;
             
-            for (let j = 0; j < rowSeats.length; j++) {
-                if (j === halfRow) rowHtml += `<div style="width: 30px;"></div>`; 
-                let classes = 'bms-seat ' + (rowSeats[j].status === 'Available' ? 'available' : 'booked disabled');
-                let dNum = rowSeats[j].seatId.replace(/\D/g, ''); 
-                if(dNum.length === 1) dNum = '0' + dNum;
-                rowHtml += `<button class="${classes}" data-id="${rowSeats[j].seatId}">${dNum}</button>`;
+            for (let j = 0; j < seatsPerRow; j++) {
+                if (j === halfRow) rowHtml += `<div style="width: 30px; flex-shrink: 0;"></div>`; 
+                if (j < rowSeats.length) {
+                    let classes = 'bms-seat ' + (rowSeats[j].status === 'Available' ? 'available' : 'booked disabled');
+                    let dNum = rowSeats[j].seatId.replace(/\D/g, ''); 
+                    if(dNum.length === 1) dNum = '0' + dNum;
+                    rowHtml += `<button class="${classes}" data-id="${rowSeats[j].seatId}">${dNum}</button>`;
+                } else {
+                    rowHtml += `<div style="width: 38px; height: 38px; margin: 0 5px; flex-shrink: 0;"></div>`;
+                }
             }
             rowHtml += `</div>`;
             rowsHtmlArray.push(rowHtml);
