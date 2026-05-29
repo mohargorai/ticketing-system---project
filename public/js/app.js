@@ -176,8 +176,21 @@ function showBookingScreen(username, isAdmin = false) {
     } else if (adminContainer) {
         adminContainer.innerHTML = '';
     }
+    
+    const locBtn = document.getElementById('nav-location-btn');
+    if(locBtn) {
+        locBtn.classList.remove('d-none');
+        locBtn.classList.add('d-flex');
+    }
 
-    renderEvents(); 
+    renderEvents().then(() => {
+        if (!localStorage.getItem('userCity')) {
+            setTimeout(() => {
+                const btn = document.querySelector('[data-bs-target="#locationModal"]');
+                if(btn) btn.click();
+            }, 800);
+        }
+    });
 }
 
 safeBind('logout-btn', 'click', async (e) => {
@@ -269,19 +282,32 @@ function renderLocationModal() {
     
     if (!container) return;
     
-    let html = `<button class="btn ${currentLocationFilter === 'All Cities' ? 'btn-danger border-danger text-white' : 'btn-outline-secondary border-dark text-white'} rounded-pill px-4 fw-bold location-pill" data-city="All Cities">All Cities</button>`;
+    let html = `<button class="btn ${currentLocationFilter === 'All Cities' ? 'btn-danger border-danger text-white' : 'btn-outline-secondary border-dark text-white'} rounded-pill px-4 py-2 fw-bold location-pill" data-city="All Cities">All Cities</button>`;
     
     cities.forEach(city => {
         const isActive = currentLocationFilter === city;
         const classes = isActive ? 'btn-danger border-danger text-white' : 'btn-outline-secondary border-dark text-white';
-        html += `<button class="btn ${classes} rounded-pill px-4 fw-bold location-pill" data-city="${city}">${city}</button>`;
+        html += `<button class="btn ${classes} rounded-pill px-4 py-2 fw-bold location-pill" data-city="${city}">${city}</button>`;
     });
     
     container.innerHTML = html;
     
+    // Attach to ALL location-pill elements (both dynamic and popular)
     document.querySelectorAll('.location-pill').forEach(btn => {
+        // Highlight active popular city visually if needed
+        if(btn.closest('#popular-cities-grid')) {
+            if(btn.getAttribute('data-city') === currentLocationFilter) {
+                btn.classList.replace('btn-outline-secondary', 'btn-danger');
+            } else {
+                btn.classList.replace('btn-danger', 'btn-outline-secondary');
+            }
+        }
+        
         btn.addEventListener('click', (e) => {
-            currentLocationFilter = e.target.getAttribute('data-city');
+            const clickedBtn = e.target.closest('.location-pill');
+            if(!clickedBtn) return;
+            
+            currentLocationFilter = clickedBtn.getAttribute('data-city');
             localStorage.setItem('userCity', currentLocationFilter);
             if (displayEl) displayEl.innerText = currentLocationFilter;
             
@@ -292,14 +318,61 @@ function renderLocationModal() {
     });
 }
 
-// Trigger modal on first load if no city selected
-window.addEventListener('DOMContentLoaded', () => {
-    if (!localStorage.getItem('userCity')) {
-        setTimeout(() => {
-            const btn = document.querySelector('[data-bs-target="#locationModal"]');
-            if(btn) btn.click();
-        }, 800);
+// 📍 Geolocation Integration
+safeBind('use-geolocation-btn', 'click', () => {
+    const geoText = document.getElementById('geolocation-text');
+    if (!navigator.geolocation) {
+        geoText.innerText = "Geolocation not supported";
+        return;
     }
+    
+    geoText.innerText = "Locating...";
+    
+    navigator.geolocation.getCurrentPosition(async (position) => {
+        try {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            // Free Reverse Geocoding API
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+            const data = await res.json();
+            
+            let city = data.address.city || data.address.town || data.address.village || data.address.county || "Unknown";
+            
+            // Set the detected city
+            currentLocationFilter = city;
+            localStorage.setItem('userCity', currentLocationFilter);
+            const displayEl = document.getElementById('nav-location-display');
+            if (displayEl) displayEl.innerText = currentLocationFilter;
+            
+            geoText.innerText = `Detected: ${city}`;
+            
+            setTimeout(() => {
+                document.getElementById('close-location-modal')?.click();
+                geoText.innerText = "Use Current Location";
+                renderLocationModal();
+                applyFilters();
+            }, 800);
+            
+        } catch (err) {
+            geoText.innerText = "Failed to detect location";
+            setTimeout(() => geoText.innerText = "Use Current Location", 2000);
+        }
+    }, () => {
+        geoText.innerText = "Permission Denied";
+        setTimeout(() => geoText.innerText = "Use Current Location", 2000);
+    });
+});
+
+// City Search Bar Logic
+safeBind('city-search-input', 'input', (e) => {
+    const term = e.target.value.toLowerCase();
+    document.querySelectorAll('#dynamic-location-pills .location-pill').forEach(btn => {
+        if(btn.innerText.toLowerCase().includes(term)) {
+            btn.classList.remove('d-none');
+        } else {
+            btn.classList.add('d-none');
+        }
+    });
 });
 
 async function renderEvents() {

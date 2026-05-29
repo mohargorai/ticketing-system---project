@@ -23,7 +23,7 @@
                     TicketHub
                 </a>
                 
-                <button class="btn btn-dark border-secondary rounded-pill d-flex align-items-center gap-2 py-1 px-3" data-bs-toggle="modal" data-bs-target="#locationModal" style="background: rgba(255,255,255,0.05); transition: all 0.3s var(--ease-bouncy);">
+                <button id="nav-location-btn" class="btn btn-dark border-secondary rounded-pill d-none align-items-center gap-2 py-1 px-3" data-bs-toggle="modal" data-bs-target="#locationModal" style="background: rgba(255,255,255,0.05); transition: all 0.3s var(--ease-bouncy);">
                     <span class="fs-6">📍</span> <span id="nav-location-display" class="fw-bold text-white" style="font-size: 13px;">Select City</span>
                 </button>
             </div>
@@ -198,17 +198,51 @@
     </article>
 
     <div class="modal fade" id="locationModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content shadow-lg">
-                <div class="modal-header border-bottom border-secondary pb-3">
-                    <h5 class="modal-title fw-bold text-white">📍 Select Your City</h5>
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content shadow-lg" style="background: var(--surface-card); border-radius: var(--radius-lg);">
+                <div class="modal-header border-bottom border-secondary pb-3 pt-4 px-4">
+                    <h5 class="modal-title fw-bold text-white">Select Location</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" id="close-location-modal"></button>
                 </div>
-                <div class="modal-body p-4 text-center">
-                    <p class="text-muted small mb-4">Choose your location to see events happening near you.</p>
-                    <div id="dynamic-location-pills" class="d-flex flex-wrap justify-content-center gap-2 mb-2">
+                <div class="modal-body p-4 p-md-5 text-start">
+                    
+                    <!-- Search Bar -->
+                    <div class="mb-4 position-relative">
+                        <span class="position-absolute text-muted" style="left: 15px; top: 12px;">🔍</span>
+                        <input type="text" id="city-search-input" class="form-control bg-transparent text-white border-secondary rounded-3" placeholder="Search city, area or locality" style="padding-left: 45px; height: 48px;">
+                    </div>
+                    
+                    <!-- Use Current Location -->
+                    <button id="use-geolocation-btn" class="btn btn-link text-primary text-decoration-none fw-bold p-0 mb-4 d-flex align-items-center gap-2">
+                        <span>🎯</span> <span id="geolocation-text">Use Current Location</span>
+                    </button>
+                    
+                    <!-- Popular Cities Grid -->
+                    <h6 class="text-muted fw-bold mb-3 small text-uppercase">Popular Cities</h6>
+                    <div id="popular-cities-grid" class="d-flex flex-wrap gap-3 mb-5">
+                        <button class="btn btn-outline-secondary border-dark rounded-3 px-3 py-2 fw-bold text-white d-flex flex-column align-items-center gap-2 location-pill" data-city="Mumbai" style="width: 100px;">
+                            <span class="fs-4">🏛️</span> Mumbai
+                        </button>
+                        <button class="btn btn-outline-secondary border-dark rounded-3 px-3 py-2 fw-bold text-white d-flex flex-column align-items-center gap-2 location-pill" data-city="Delhi NCR" style="width: 100px;">
+                            <span class="fs-4">🕌</span> Delhi NCR
+                        </button>
+                        <button class="btn btn-outline-secondary border-dark rounded-3 px-3 py-2 fw-bold text-white d-flex flex-column align-items-center gap-2 location-pill" data-city="Bengaluru" style="width: 100px;">
+                            <span class="fs-4">🏢</span> Bengaluru
+                        </button>
+                        <button class="btn btn-outline-secondary border-dark rounded-3 px-3 py-2 fw-bold text-white d-flex flex-column align-items-center gap-2 location-pill" data-city="Hyderabad" style="width: 100px;">
+                            <span class="fs-4">🏰</span> Hyderabad
+                        </button>
+                        <button class="btn btn-outline-secondary border-dark rounded-3 px-3 py-2 fw-bold text-white d-flex flex-column align-items-center gap-2 location-pill" data-city="Chennai" style="width: 100px;">
+                            <span class="fs-4">🛕</span> Chennai
+                        </button>
+                    </div>
+
+                    <!-- All Cities List -->
+                    <h6 class="text-muted fw-bold mb-3 small text-uppercase">All Cities</h6>
+                    <div id="dynamic-location-pills" class="d-flex flex-wrap gap-2 mb-2">
                         <span class="spinner-border spinner-border-sm text-muted"></span>
                     </div>
+                    
                 </div>
             </div>
         </div>
