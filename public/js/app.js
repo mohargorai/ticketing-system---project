@@ -709,7 +709,7 @@ async function triggerStandardEventSelection(eventData) {
         window.scrollTo({ top: 0, behavior: 'smooth' });
         document.querySelector('.district-date-pill')?.click(); 
     }
-});
+}
 
 function getStatusClass(available, capacity) {
     const percentage = (available / capacity) * 100;
