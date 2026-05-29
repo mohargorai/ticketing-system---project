@@ -26,6 +26,7 @@
     --radius-pill: 9999px;
     --font-family: 'Outfit', sans-serif;
     --ease-bouncy: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
     
     /* Glass Effect Backdrop */
     --glass-blur: blur(16px);
@@ -41,9 +42,15 @@ body {
     -webkit-font-smoothing: antialiased; 
     /* Ambient Glow Background */
     background-image: 
-        radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.08), transparent 25%),
-        radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.08), transparent 25%);
+        radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.08), transparent 45%),
+        radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.08), transparent 45%);
     background-attachment: fixed;
+    animation: ambientPulse 10s ease-in-out infinite alternate;
+}
+
+@keyframes ambientPulse {
+    0% { background-position: 0% 0%; }
+    100% { background-position: 100% 100%; }
 }
 
 h1, h2, h3, h4, h5, h6 { font-weight: 800; letter-spacing: -0.5px; color: var(--text-main) !important; }
@@ -63,13 +70,20 @@ h1, h2, h3, h4, h5, h6 { font-weight: 800; letter-spacing: -0.5px; color: var(--
 .text-muted { color: var(--text-muted) !important; }
 
 /* NAVBAR */
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-4px); }
+    100% { transform: translateY(0px); }
+}
+
 .navbar { 
     background: rgba(9, 9, 11, 0.8) !important; 
     backdrop-filter: var(--glass-blur);
     border-bottom: 1px solid var(--border-color); 
     padding: 16px 24px; 
 }
-.navbar-brand { font-size: 1.6rem; font-weight: 800; color: white !important; letter-spacing: -1px; }
+.navbar-brand { font-size: 1.6rem; font-weight: 800; color: white !important; letter-spacing: -1px; display: inline-flex; align-items: center;}
+.navbar-brand:hover div { animation: float 2s ease-in-out infinite; }
 
 /* TICKETHUB BUTTONS */
 .btn { 
@@ -84,13 +98,19 @@ h1, h2, h3, h4, h5, h6 { font-weight: 800; letter-spacing: -0.5px; color: var(--
 .btn:active { transform: scale(0.92); }
 .btn-sm { padding: 8px 16px; font-size: 0.85rem; }
 .btn-primary { 
-    background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary)); 
+    background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary), var(--brand-primary)); 
+    background-size: 200% auto;
     color: white !important; 
     box-shadow: 0 4px 15px var(--brand-glow);
+    animation: gradientShift 4s linear infinite;
+}
+@keyframes gradientShift {
+    0% { background-position: 0% center; }
+    100% { background-position: 200% center; }
 }
 .btn-primary:hover { 
     filter: brightness(1.15); 
-    transform: translateY(-3px); 
+    transform: translateY(-3px) scale(1.02); 
     box-shadow: 0 8px 25px var(--brand-glow); 
 }
 .btn-danger {
@@ -118,7 +138,12 @@ h1, h2, h3, h4, h5, h6 { font-weight: 800; letter-spacing: -0.5px; color: var(--
 .form-control::placeholder { color: #52525b; }
 .form-control:disabled { opacity: 0.5; }
 
-/* EVENT CARDS (Bento Box Style) */
+/* EVENT CARDS (Bento Box Style & Kinetic Entrance) */
+@keyframes fadeUpIn {
+    0% { opacity: 0; transform: translateY(30px) scale(0.95); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 .card { 
     background: var(--surface-card); 
     backdrop-filter: var(--glass-blur);
@@ -127,7 +152,17 @@ h1, h2, h3, h4, h5, h6 { font-weight: 800; letter-spacing: -0.5px; color: var(--
     color: var(--text-main) !important; 
     box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
     overflow: hidden;
+    animation: fadeUpIn 0.6s var(--ease-smooth) both;
 }
+
+/* Staggered entrances for cards */
+.col-md-4:nth-child(1) .card { animation-delay: 0.05s; }
+.col-md-4:nth-child(2) .card { animation-delay: 0.1s; }
+.col-md-4:nth-child(3) .card { animation-delay: 0.15s; }
+.col-md-4:nth-child(4) .card { animation-delay: 0.2s; }
+.col-md-4:nth-child(5) .card { animation-delay: 0.25s; }
+.col-md-4:nth-child(6) .card { animation-delay: 0.3s; }
+
 .event-card { cursor: pointer; transition: all 0.4s var(--ease-bouncy); }
 .event-card:hover { 
     transform: translateY(-8px) scale(1.02); 
@@ -196,6 +231,15 @@ h1, h2, h3, h4, h5, h6 { font-weight: 800; letter-spacing: -0.5px; color: var(--
 .seat-pill { background: rgba(255,255,255,0.1); color: white; padding: 6px 12px; border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: 700; display: inline-flex; align-items: center; border: 1px solid var(--border-color); }
 
 /* MODALS & ADMIN */
+@keyframes modalPop {
+    0% { opacity: 0; transform: scale(0.95) translateY(20px); }
+    100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal.show .modal-dialog {
+    animation: modalPop 0.4s var(--ease-bouncy) forwards;
+}
+
 .modal-content { background: rgba(24, 24, 27, 0.9); backdrop-filter: var(--glass-blur); border: 1px solid var(--border-color); border-radius: var(--radius-lg); box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
 .modal-header .btn-close { filter: invert(1); opacity: 0.8; }
 
