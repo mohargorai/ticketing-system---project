@@ -308,8 +308,17 @@ function renderLocationModal() {
     
     container.innerHTML = html;
     
-    // Attach to ALL location-pill elements
+    // Attach to ALL location-pill elements (both dynamic and popular)
     document.querySelectorAll('.location-pill').forEach(btn => {
+        // Highlight active popular city visually if needed
+        if(btn.closest('#popular-cities-grid')) {
+            if(btn.getAttribute('data-city') === currentLocationFilter) {
+                btn.classList.replace('btn-outline-secondary', 'btn-danger');
+            } else {
+                btn.classList.replace('btn-danger', 'btn-outline-secondary');
+            }
+        }
+        
         btn.addEventListener('click', (e) => {
             const clickedBtn = e.target.closest('.location-pill');
             if(!clickedBtn) return;
@@ -370,82 +379,77 @@ safeBind('use-geolocation-btn', 'click', () => {
     });
 });
 
-// City Search Bar Logic & Autocomplete Suggestions
-let searchTimeout;
+// City Search Bar Logic (Autocomplete)
+let citySearchDebounceTimer;
 safeBind('city-search-input', 'input', (e) => {
-    const term = e.target.value.trim();
-    const container = document.getElementById('city-suggestions-container');
+    const term = e.target.value.toLowerCase().trim();
+    const suggestionsList = document.getElementById('city-suggestions-list');
     
-    // Fallback: still filter the bottom available cities pills
+    // Fallback: Filter existing "All Cities" list
     document.querySelectorAll('#dynamic-location-pills .location-pill').forEach(btn => {
-        if(btn.innerText.toLowerCase().includes(term.toLowerCase())) {
+        if(btn.innerText.toLowerCase().includes(term)) {
             btn.classList.remove('d-none');
         } else {
             btn.classList.add('d-none');
         }
     });
 
-    if (term.length < 2) {
-        if (container) container.classList.add('d-none');
+    if (term.length < 3) {
+        if (suggestionsList) suggestionsList.classList.add('d-none');
         return;
     }
 
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(async () => {
+    clearTimeout(citySearchDebounceTimer);
+    citySearchDebounceTimer = setTimeout(async () => {
         try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(term)}&format=json&addressdetails=1&limit=5`);
+            // Fetch suggestions restricted to India
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${term}&countrycodes=in&limit=5`);
             const data = await res.json();
             
-            if (data.length > 0 && container) {
-                let html = '';
-                data.forEach(place => {
-                    const mainText = place.name;
-                    const subText = place.display_name.split(',').slice(1, 3).join(',').trim();
-                    const city = place.address.city || place.address.town || place.address.village || place.name;
-                    
-                    html += `
-                        <div class="suggestion-item p-3 border-bottom border-secondary" style="cursor: pointer; transition: background 0.2s;" data-city="${city}">
-                            <div class="d-flex align-items-start gap-3">
-                                <span class="text-muted mt-1">📍</span>
-                                <div>
-                                    <div class="text-white fw-bold">${mainText}</div>
-                                    <div class="text-muted small">${subText}</div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                });
+            if (data.length > 0 && suggestionsList) {
+                suggestionsList.innerHTML = '';
+                const uniqueCities = new Set();
                 
-                container.innerHTML = html;
-                container.classList.remove('d-none');
-                
-                container.querySelectorAll('.suggestion-item').forEach(item => {
-                    item.addEventListener('mouseenter', () => item.style.background = 'rgba(255,255,255,0.05)');
-                    item.addEventListener('mouseleave', () => item.style.background = 'transparent');
+                data.forEach(item => {
+                    const parts = item.display_name.split(',');
+                    const city = parts[0].trim();
                     
-                    item.addEventListener('click', () => {
-                        const clickedCity = item.getAttribute('data-city');
-                        currentLocationFilter = clickedCity;
-                        localStorage.setItem('userCity', currentLocationFilter);
+                    if (!uniqueCities.has(city)) {
+                        uniqueCities.add(city);
+                        const li = document.createElement('li');
+                        li.className = 'p-3 border-bottom border-secondary';
+                        li.style.cursor = 'pointer';
+                        li.innerHTML = `<div class="d-flex align-items-center gap-2"><span class="fs-5">📍</span><div><strong class="text-white">${city}</strong><small class="text-muted d-block" style="font-size: 11px;">${item.display_name}</small></div></div>`;
                         
-                        const displayEl = document.getElementById('nav-location-display');
-                        if (displayEl) displayEl.innerText = currentLocationFilter;
+                        li.addEventListener('click', () => {
+                            currentLocationFilter = city;
+                            localStorage.setItem('userCity', currentLocationFilter);
+                            const displayEl = document.getElementById('nav-location-display');
+                            if (displayEl) displayEl.innerText = currentLocationFilter;
+                            
+                            document.getElementById('close-location-modal')?.click();
+                            renderLocationModal();
+                            applyFilters();
+                            
+                            suggestionsList.classList.add('d-none');
+                            e.target.value = '';
+                        });
                         
-                        document.getElementById('city-search-input').value = '';
-                        container.classList.add('d-none');
-                        document.getElementById('close-location-modal')?.click();
+                        // Hover effects
+                        li.addEventListener('mouseenter', () => li.style.background = 'rgba(255,255,255,0.05)');
+                        li.addEventListener('mouseleave', () => li.style.background = 'transparent');
                         
-                        renderLocationModal();
-                        applyFilters();
-                    });
+                        suggestionsList.appendChild(li);
+                    }
                 });
-            } else if (container) {
-                container.classList.add('d-none');
+                suggestionsList.classList.remove('d-none');
+            } else if (suggestionsList) {
+                suggestionsList.classList.add('d-none');
             }
-        } catch (err) {
-            console.warn("Location search failed", err);
+        } catch(err) {
+            console.error("Geocoding fetch failed", err);
         }
-    }, 500);
+    }, 400);
 });
 
 async function renderEvents() {
