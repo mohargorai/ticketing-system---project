@@ -597,13 +597,13 @@ function showCinemaSelection(title) {
         cinemaPills.innerHTML = group.subEvents.map(ev => {
             const loc = ev.location || 'Unknown Location';
             return `
-            <div class="card border border-secondary bg-dark p-3 cinema-hall-card" style="cursor: pointer; transition: all 0.3s;" data-id="${ev._id}" onmouseover="this.classList.add('border-danger')" onmouseout="this.classList.remove('border-danger')">
+            <div class="card cinema-hall-card border-secondary p-3 mb-2" style="cursor: pointer; background: rgba(255,255,255,0.03); border-radius: 16px; transition: all 0.3s var(--ease-smooth); backdrop-filter: blur(10px);" data-id="${ev._id}" onmouseover="this.style.background='rgba(255,255,255,0.08)'; this.style.borderColor='var(--brand-primary)';" onmouseout="this.style.background='rgba(255,255,255,0.03)'; this.style.borderColor='var(--border-color)';">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="text-white fw-bold mb-1">${loc}</h6>
+                        <h6 class="text-white fw-bold mb-1" style="font-size: 15px;">${loc}</h6>
                         <span class="text-muted small">Select to view showtimes</span>
                     </div>
-                    <span class="fs-4">🍿</span>
+                    <span class="fs-4" style="filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));">🍿</span>
                 </div>
             </div>`;
         }).join('');
