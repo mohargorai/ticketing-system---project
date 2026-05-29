@@ -244,11 +244,15 @@ async function renderEvents() {
     if(!container) return;
 
     if (allEvents.length === 0) {
-        container.innerHTML = Array(3).fill(`
+        container.innerHTML = Array(6).fill(`
             <div class="col-md-4">
-                <div class="card event-card h-100 placeholder-glow">
-                    <div class="placeholder w-100" style="height: 200px; background-color: #262626;"></div>
-                    <div class="card-body p-4"><span class="placeholder col-8 bg-secondary"></span></div>
+                <div class="card event-card h-100 skeleton-card">
+                    <div class="skeleton-img"></div>
+                    <div class="card-body p-4 d-flex flex-column gap-3">
+                        <div class="skeleton-text w-75"></div>
+                        <div class="skeleton-text w-50"></div>
+                        <div class="skeleton-text w-100 mt-auto" style="height: 40px; border-radius: 999px;"></div>
+                    </div>
                 </div>
             </div>
         `).join('');
