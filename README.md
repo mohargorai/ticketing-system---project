@@ -8,6 +8,8 @@
 
 A high-performance, real-time event ticketing engine built with Node.js, Express, MongoDB, Redis, and Vanilla JavaScript. Architected to handle high concurrency and race conditions, this platform features bi-directional live seat synchronization, in-memory caching for high-traffic resiliency, dynamic time-slot routing, and a secure, data-driven admin CMS.
 
+> **🎓 Academic Note:** This project was developed as part of the Semester 4 Web Technology course.
+
 ## ✨ Engineering Highlights & Features
 
 * **🇮🇳 Live Indian City Autocomplete:** Integrated with the **Nominatim (OpenStreetMap) API** to provide instantaneous, real-time city search suggestions restricted exclusively to India, fully replacing static location grids.
