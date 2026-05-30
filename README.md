@@ -10,6 +10,9 @@ A high-performance, real-time event ticketing engine built with Node.js, Express
 
 ## ✨ Engineering Highlights & Features
 
+* **🇮🇳 Live Indian City Autocomplete:** Integrated with the **Nominatim (OpenStreetMap) API** to provide instantaneous, real-time city search suggestions restricted exclusively to India, fully replacing static location grids.
+* **🎥 Intelligent Movie Grouping & Cinema Routing:** Identical movie screenings across different venues are programmatically merged into a single overarching "Movie Card". Clicking this card initiates a nested routing flow where users seamlessly select their preferred Cinema Hall before picking dates and seats—perfectly mimicking enterprise architectures like BookMyShow.
+* **💺 Symmetrical Seat Matrix Engine:** A mathematically flawless flexbox engine that automatically detects partial/short seat rows and centers them with perfectly distributed invisible placeholders, guaranteeing a realistic, perfectly aligned auditorium layout from the front row to the back.
 * **⚡ Redis In-Memory Caching:** Implements a robust caching layer using `redis` with graceful degradation. High-traffic endpoints (like the events feed) are served from memory, reducing database load. Includes smart cache invalidation triggered automatically upon ticket sales or admin updates.
 * **🕰️ Dynamic Showtimes & Rolling Calendars:** Supports multi-day events with dynamically generated, capacity-aware time slots. Uses algorithm-driven color thresholds (Green/Yellow/Red) to visually indicate availability percentages.
 * **🛡️ Concurrency Control (ACID Compliance):** Utilizes MongoDB atomic operators (`$inc`) and strict compound database indexes (`eventId + seatId + bookingDate + timeSlot`) to mathematically guarantee that two users cannot book the same seat at the exact same millisecond.
@@ -20,11 +23,12 @@ A high-performance, real-time event ticketing engine built with Node.js, Express
 * **📄 Client-Side PDF Generation:** Offloads heavy document generation from the backend by utilizing `jsPDF` to construct scalable, custom-styled digital PDF tickets with perforated stub designs directly within the user's browser.
 * **📊 Data-Driven Admin Dashboard:** A secure CMS featuring a custom-styled, real-time `Chart.js` bar chart with vertical gradients, tooltips, and dynamic scaling to track gross revenue per event alongside core user analytics.
 * **🖼️ Edge Asset Compression:** To prevent database bloating and ensure ultra-fast content delivery, event posters are intercepted via the HTML5 Canvas API, aggressively resized, and compressed into lightweight JPEGs *before* being transmitted to the server.
-* **🔐 CBFC Rating Enforcement:** Integrated Indian CBFC ratings (U, UA 7+, UA 13+, UA 16+, A, S) dynamically cross-referenced against the authenticated user's calculated Date of Birth to enforce strict access control.
+* **🔐 CBFC Rating Enforcement:** Integrated Indian CBFC ratings dynamically cross-referenced against the authenticated user's calculated Date of Birth to enforce strict access control.
+* **🛡️ Crash Resiliency:** Process-level error bounds (`uncaughtException` & `unhandledRejection`) guarantee that transient cloud-database drops (e.g., MongoDB Atlas timeout) do not crash the Node.js server loop, ensuring robust deployment capabilities on platforms like Render.
 
 ## 🛠️ Technology Stack
 
-* **Frontend:** HTML5, CSS3 (Deep Dark Mode UI, CSS Variables, Flexbox/Grid), Vanilla JavaScript, Bootstrap 5.
+* **Frontend:** HTML5, CSS3 (Modern Glassmorphism, Bento Grid Layouts, Deep Dark Mode UI, CSS Variables, Flexbox), Vanilla JavaScript, Bootstrap 5.
 * **Libraries:** `Chart.js` (Analytics), `qrcodejs` (Digital Passes), `jspdf` (Ticket Exporting).
 * **Backend:** Node.js, Express.js.
 * **Database & Cache:** MongoDB Atlas & Mongoose (Object Data Modeling with `.lean()` optimization), Redis (In-Memory Data Store).
@@ -40,7 +44,7 @@ A high-performance, real-time event ticketing engine built with Node.js, Express
 
 ### 2. Clone the Repository
 ```bash
-git clone [https://github.com/MoharXD/ticketing-system---project.git](https://github.com/MoharXD/ticketing-system---project.git)
+git clone https://github.com/MoharXD/ticketing-system---project.git
 cd ticketing-system
 ```
 
@@ -71,7 +75,7 @@ The application will be running at `http://localhost:3000`.
 
 ## 📖 Usage Guide
 
-1. **Standard User:** Navigate to the home page, create an account, and browse the rolling 4-day calendar. Select a dynamic time slot to view the live seating matrix. Access your digital passes, selectively cancel seats, and download PDF tickets from the "My Bookings" dropdown.
+1. **Standard User:** Navigate to the home page, create an account, and search for events across India using the live city autocomplete. Identical movie screenings are grouped together—select a movie, pick your preferred cinema hall, and browse the rolling calendar. Select a dynamic time slot to view the symmetrically-rendered live seating matrix. Access your digital passes, selectively cancel seats, and download PDF tickets from the "My Bookings" dropdown.
 2. **Administrator:** * Navigate directly to the Admin Portal.
     * Click "Authorize a new Admin Account" and use your `ADMIN_SECRET` key to bypass root-security checks.
     * Access the Admin Panel via your user dropdown to deploy events, view live revenue charts, and manage user lifecycles.
