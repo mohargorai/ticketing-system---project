@@ -131,14 +131,14 @@ h1, h2, h3, h4, h5, h6 { font-weight: 800; letter-spacing: -0.5px; color: var(--
     border-radius: var(--radius-sm); border: 1px solid var(--border-color); padding: 14px 20px; font-size: 1rem; 
     background-color: rgba(0,0,0,0.3); color: var(--text-main); transition: all 0.3s ease; 
 }
-option { background-color: #18181b; color: white; }
+option { background-color: #18181b !important; color: white !important; }
 .form-control:focus, .form-select:focus { 
     background-color: rgba(0,0,0,0.5); border-color: var(--brand-primary); 
     box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2); color: white; outline: none; 
 }
 .form-control::placeholder { color: #52525b; }
 .form-control:disabled, .form-control[readonly], .form-select:disabled { 
-    background-color: rgba(255, 255, 255, 0.05); opacity: 0.6; color: #a1a1aa; 
+    background-color: rgba(255, 255, 255, 0.05) !important; opacity: 0.6 !important; color: #a1a1aa !important; 
 }
 
 /* EVENT CARDS (Bento Box Style & Kinetic Entrance) */
