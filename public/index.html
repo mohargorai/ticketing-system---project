@@ -31,10 +31,17 @@
 
         /* FIX DROPDOWN ALIGNMENT */
         .dropdown-menu-dark .dropdown-item {
-            display: flex !important; align-items: center !important;
+            display: grid !important; 
+            grid-template-columns: 24px 1fr !important; 
+            align-items: center !important; 
+            gap: 12px !important;
+            padding: 12px 20px !important;
+            text-align: left !important;
         }
         .dropdown-menu-dark .dropdown-item .fs-6 {
-            display: inline-flex !important; align-items: center !important; justify-content: center !important; width: 28px !important; text-align: center !important; margin-right: 12px !important;
+            display: block !important; 
+            text-align: center !important; 
+            margin: 0 !important;
         }
     </style>
 </head>
@@ -78,11 +85,11 @@
                                 <span>Hello, <span id="username-badge" class="text-danger ms-1"></span></span>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark shadow-lg mt-3 w-100 w-lg-auto" aria-labelledby="userMenuButton">
-                                <li><a class="dropdown-item fw-bold text-white" href="#" id="profile-link-btn"><span class="fs-6 me-2">👤</span> Profile Settings</a></li>
-                                <li><a class="dropdown-item fw-bold text-white" href="#" id="nav-bookings-link"><span class="fs-6 me-2">🎟️</span> My Bookings</a></li>
+                                <li><a class="dropdown-item fw-bold text-white" href="#" id="profile-link-btn"><span class="fs-6">👤</span> Profile Settings</a></li>
+                                <li><a class="dropdown-item fw-bold text-white" href="#" id="nav-bookings-link"><span class="fs-6">🎟️</span> My Bookings</a></li>
                                 <div id="admin-link-container"></div>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item fw-bold text-danger" href="#" id="logout-btn"><span class="fs-6 me-2">🚪</span> Sign Out</a></li>
+                                <li><a class="dropdown-item fw-bold text-danger" href="#" id="logout-btn"><span class="fs-6">🚪</span> Sign Out</a></li>
                             </ul>
                         </div>
                     </div>
