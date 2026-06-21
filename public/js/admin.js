@@ -345,26 +345,37 @@ async function loadUsers() {
 
     try {
         const res = await fetch(`/api/admin/users?t=${Date.now()}`);
-        const users = await res.json();
-
-        if (users.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No users found.</td></tr>';
-            return;
-        }
-
-        tbody.innerHTML = users.map(u => `
-            <tr>
-                <td class="ps-4">${u.username}</td>
-                <td>${u.isAdmin ? '<span class="badge bg-warning text-dark">Admin</span>' : '<span class="badge bg-secondary">User</span>'}</td>
-                <td class="text-end pe-4">
-                    <button class="btn btn-outline-danger btn-sm fw-bold" onclick="deleteUser('${u._id}')">Remove</button>
-                </td>
-            </tr>
-        `).join('');
+        window.allUsers = await res.json();
+        renderUsers(window.allUsers);
     } catch (err) {
         console.error("Error loading users:", err);
     }
 }
+
+window.renderUsers = function(users) {
+    const tbody = document.getElementById('user-table-body');
+    if (users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No users found.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = users.map(u => `
+        <tr>
+            <td class="ps-4">${u.username}</td>
+            <td>${u.isAdmin ? '<span class="badge bg-warning text-dark">Admin</span>' : '<span class="badge bg-secondary">User</span>'}</td>
+            <td class="text-end pe-4">
+                <button class="btn btn-outline-danger btn-sm fw-bold" onclick="deleteUser('${u._id}')">Remove</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+document.getElementById('user-search-input')?.addEventListener('input', (e) => {
+    const query = e.target.value.toLowerCase();
+    if (!window.allUsers) return;
+    const filtered = window.allUsers.filter(u => u.username.toLowerCase().includes(query));
+    renderUsers(filtered);
+});
 
 eventForm.addEventListener('submit', async (e) => {
     e.preventDefault(); 

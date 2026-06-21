@@ -181,10 +181,17 @@
         </section>
 
         <section class="card mb-5">
-            <div class="card-header fs-5 pt-4 pb-3 px-4 text-white fw-bold d-flex align-items-center gap-2" style="background: transparent; border-bottom: 1px solid var(--border-color);">
-                <span>👥</span> User Management
+            <div class="card-header fs-5 pt-4 pb-3 px-4 text-white fw-bold d-flex flex-wrap justify-content-between align-items-center gap-3" style="background: transparent; border-bottom: 1px solid var(--border-color);">
+                <div class="d-flex align-items-center gap-2">
+                    <span>👥</span> User Management
+                </div>
+                <div class="d-flex gap-2">
+                    <input type="text" id="user-search-input" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Search username..." style="max-width: 200px;">
+                    <button class="btn btn-outline-info btn-sm fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#userCollapse" aria-expanded="false" aria-controls="userCollapse">Toggle Users</button>
+                </div>
             </div>
-            <div class="card-body p-0 table-responsive">
+            <div class="collapse" id="userCollapse">
+                <div class="card-body p-0 table-responsive">
                 <table class="table table-dark table-hover align-middle mb-0" style="min-width: 500px;">
                     <thead>
                         <tr>
@@ -195,6 +202,7 @@
                     </thead>
                     <tbody id="user-table-body"></tbody>
                 </table>
+            </div>
             </div>
         </section>
     </main>
