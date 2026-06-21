@@ -372,6 +372,16 @@ window.renderUsers = function(users) {
 
 document.getElementById('user-search-input')?.addEventListener('input', (e) => {
     const query = e.target.value.toLowerCase();
+    
+    // Auto-expand the table if it is collapsed and we are searching
+    if (query.length > 0) {
+        const userCollapseEl = document.getElementById('userCollapse');
+        if (userCollapseEl && !userCollapseEl.classList.contains('show')) {
+            const bsCollapse = bootstrap.Collapse.getOrCreateInstance(userCollapseEl);
+            bsCollapse.show();
+        }
+    }
+
     if (!window.allUsers) return;
     const filtered = window.allUsers.filter(u => u.username.toLowerCase().includes(query));
     renderUsers(filtered);
