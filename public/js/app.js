@@ -1505,3 +1505,21 @@ safeBind('profile-dob', 'change', (e) => {
         hideLoader(); switchView('auth-section');
     }
 })();
+
+// 🎬 MOBILE NAVBAR STAGGERED ENTRANCE ANIMATION (Replicating StaggeredMenu-JS-CSS)
+document.addEventListener("DOMContentLoaded", () => {
+    const mobileNavbar = document.getElementById('mobileNavbar');
+    if (mobileNavbar) {
+        mobileNavbar.addEventListener('show.bs.collapse', function () {
+            setTimeout(() => {
+                const items = this.querySelectorAll('button, .dropdown');
+                if (typeof gsap !== 'undefined') {
+                    gsap.fromTo(items, 
+                        { y: 30, opacity: 0, rotate: 2 }, 
+                        { y: 0, opacity: 1, rotate: 0, duration: 0.6, stagger: 0.1, ease: 'power4.out', overwrite: true }
+                    );
+                }
+            }, 50);
+        });
+    }
+});
