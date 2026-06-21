@@ -185,7 +185,7 @@ function showBookingScreen(username, isAdmin = false) {
 
     const adminContainer = document.getElementById('admin-link-container');
     if (isAdmin && adminContainer) {
-        adminContainer.innerHTML = `<li><a class="dropdown-item fw-bold py-2 text-warning d-flex align-items-center gap-2" href="admin.html" id="nav-admin-link"><span class="fs-6">🛠️</span> Admin Panel</a></li>`;
+        adminContainer.innerHTML = `<li><a class="dropdown-item fw-bold text-warning" href="admin.html" id="nav-admin-link">Admin Panel</a></li>`;
     } else if (adminContainer) {
         adminContainer.innerHTML = '';
     }
