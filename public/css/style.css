@@ -224,26 +224,27 @@ option { background-color: #18181b !important; color: white !important; }
 .skeleton-text { height: 16px; border-radius: 4px; animation: skeletonPulse 1.5s infinite; }
 
 /* HORIZONTAL SCROLL DATES */
-.district-date-container { display: flex; overflow-x: auto; gap: 1.5rem; padding-top: 10px; padding-bottom: 15px; margin-bottom: 25px; scrollbar-width: none; justify-content: flex-start; }
+.district-date-container { display: flex; overflow-x: auto; gap: 1.5rem; padding-bottom: 15px; margin-bottom: 25px; scrollbar-width: none; justify-content: flex-start; overflow-y: visible; }
 .district-date-container::-webkit-scrollbar { display: none; }
 .district-date-pill { 
     background: var(--surface-card); border: 1px solid var(--border-color); color: var(--text-muted); 
     padding: 12px 20px; border-radius: var(--radius-md); min-width: 100px; text-align: center; 
     cursor: pointer; transition: all 0.3s var(--ease-bouncy); flex-shrink: 0; backdrop-filter: var(--glass-blur);
+    margin: 5px;
 }
-.district-date-pill:hover { border-color: var(--brand-primary); color: white; transform: translateY(-3px); }
+.district-date-pill:hover { border-color: var(--brand-primary); color: white; transform: translateY(-4px) scale(1.05); }
 .district-date-pill.active { 
     background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary)); 
     border-color: transparent; color: white; box-shadow: 0 8px 20px var(--brand-glow); 
 }
 
 /* TIME SLOT UI */
-.time-slot-container { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 20px; padding-top: 10px; }
+.time-slot-container { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 10px; overflow: visible; }
 .time-slot-pill {
     background: var(--surface-card); border: 1px solid var(--border-color); color: var(--text-main);
     padding: 12px 24px; border-radius: var(--radius-pill); font-weight: 700; font-size: 15px; cursor: pointer;
     transition: all 0.3s var(--ease-bouncy); display: flex; flex-direction: column; align-items: center; 
-    backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur); margin: 5px;
 }
 .time-slot-pill.status-green { border-color: rgba(16, 185, 129, 0.4); }
 .time-slot-pill.status-yellow { border-color: rgba(245, 158, 11, 0.4); }
@@ -420,26 +421,28 @@ option { background-color: #18181b !important; color: white !important; }
 }
 
 @media (max-width: 768px) {
-.district-date-container { display: flex; overflow-x: auto; gap: 1.5rem; padding-top: 10px; padding-bottom: 15px; margin-bottom: 25px; scrollbar-width: none; justify-content: flex-start; }
+/* HORIZONTAL SCROLL DATES */
+.district-date-container { display: flex; overflow-x: auto; gap: 1.5rem; padding-bottom: 15px; margin-bottom: 25px; scrollbar-width: none; justify-content: flex-start; overflow-y: visible; }
 .district-date-container::-webkit-scrollbar { display: none; }
 .district-date-pill { 
     background: var(--surface-card); border: 1px solid var(--border-color); color: var(--text-muted); 
     padding: 12px 20px; border-radius: var(--radius-md); min-width: 100px; text-align: center; 
     cursor: pointer; transition: all 0.3s var(--ease-bouncy); flex-shrink: 0; backdrop-filter: var(--glass-blur);
+    margin: 5px;
 }
-.district-date-pill:hover { border-color: var(--brand-primary); color: white; transform: translateY(-3px); }
+.district-date-pill:hover { border-color: var(--brand-primary); color: white; transform: translateY(-4px) scale(1.05); }
 .district-date-pill.active { 
     background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary)); 
     border-color: transparent; color: white; box-shadow: 0 8px 20px var(--brand-glow); 
 }
 
 /* TIME SLOT UI */
-.time-slot-container { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 20px; padding-top: 10px; }
+.time-slot-container { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 10px; overflow: visible; }
 .time-slot-pill {
     background: var(--surface-card); border: 1px solid var(--border-color); color: var(--text-main);
     padding: 12px 24px; border-radius: var(--radius-pill); font-weight: 700; font-size: 15px; cursor: pointer;
     transition: all 0.3s var(--ease-bouncy); display: flex; flex-direction: column; align-items: center; 
-    backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur); margin: 5px;
 }
 .time-slot-pill.status-green { border-color: rgba(16, 185, 129, 0.4); }
 .time-slot-pill.status-yellow { border-color: rgba(245, 158, 11, 0.4); }
