@@ -72,17 +72,64 @@ async function loadAnalytics() {
         const data = await res.json();
         
         if(data.success) {
-            // 🚨 FIXED: Formatting exact revenue with commas and clamping to 2 decimal places
-            document.getElementById('stat-revenue').innerText = data.totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            document.getElementById('stat-tickets').innerText = data.totalTicketsSold.toLocaleString();
-            document.getElementById('stat-events').innerText = data.totalEvents.toLocaleString();
-            document.getElementById('stat-users').innerText = data.totalUsers.toLocaleString();
+            animateCountUp(document.getElementById('stat-revenue'), 0, data.totalRevenue, 1500, true);
+            animateCountUp(document.getElementById('stat-tickets'), 0, data.totalTicketsSold, 1500, false);
+            animateCountUp(document.getElementById('stat-events'), 0, data.totalEvents, 1500, false);
+            animateCountUp(document.getElementById('stat-users'), 0, data.totalUsers, 1500, false);
 
             renderChart(data.eventStats);
         }
     } catch (err) {
         console.error("Error loading analytics:", err);
     }
+}
+
+// 🎨 Count Up Animation for Stats
+function animateCountUp(element, start, end, duration, isCurrency = false) {
+    // Wait until element is visible (like useInView)
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                observer.unobserve(element);
+                
+                let startTimestamp = null;
+                const step = (timestamp) => {
+                    if (!startTimestamp) startTimestamp = timestamp;
+                    const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                    
+                    // Easing function (easeOutExpo)
+                    const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+                    const currentVal = start + (end - start) * easeProgress;
+                    
+                    if (isCurrency) {
+                        element.innerText = currentVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    } else {
+                        element.innerText = Math.floor(currentVal).toLocaleString('en-IN');
+                    }
+                    
+                    if (progress < 1) {
+                        window.requestAnimationFrame(step);
+                    } else {
+                        if (isCurrency) {
+                            element.innerText = end.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        } else {
+                            element.innerText = end.toLocaleString('en-IN');
+                        }
+                    }
+                };
+                window.requestAnimationFrame(step);
+            }
+        });
+    }, { threshold: 0.1 });
+    
+    // Set initial 0 value before animation starts
+    if (isCurrency) {
+        element.innerText = (0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    } else {
+        element.innerText = "0";
+    }
+    
+    observer.observe(element);
 }
 
 // 🚨 PREMIUM CHART UI OVERHAUL
