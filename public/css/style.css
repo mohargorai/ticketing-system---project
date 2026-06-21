@@ -551,10 +551,6 @@ option { background-color: #18181b !important; color: white !important; }
 }
 .dropdown-menu-dark .dropdown-item {
     border-radius: 8px; padding: 12px 20px !important; transition: all 0.2s ease; font-size: 15px !important; font-weight: 600;
-    display: flex; align-items: center;
-}
-.dropdown-menu-dark .dropdown-item .fs-6 {
-    display: inline-flex; align-items: center; justify-content: center; width: 28px; text-align: center; margin-right: 12px !important;
 }
 .dropdown-menu-dark .dropdown-item:hover { background: rgba(255,255,255,0.1) !important; transform: translateX(5px); }
 /* STAGGERED DROPDOWN ANIMATION */
