@@ -213,11 +213,64 @@
         </div>
     </footer>
 
+    <!-- Role Toggle Modal -->
+    <div class="modal fade" id="roleToggleModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark border-secondary">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title text-white fw-bold">Confirm Role Change</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-white">
+                    <p>You are about to toggle the role for <strong id="roleToggleUsername" class="text-warning"></strong>.</p>
+                    <p class="mb-2">Please enter the Admin Secret Key to confirm this action:</p>
+                    <input type="password" id="adminSecretKeyInput" class="form-control bg-dark text-white border-secondary" placeholder="Admin Secret Key">
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-warning fw-bold text-dark" id="confirmRoleBtn">Confirm Change</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View User Tickets Modal -->
+    <div class="modal fade" id="userTicketsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content bg-dark border-secondary">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title text-white fw-bold">Tickets for <span id="ticketsUsername" class="text-info"></span></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-white p-0">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="ps-3">Event</th>
+                                    <th>Date & Time</th>
+                                    <th>Seat / Status</th>
+                                    <th class="text-end pe-3">Price</th>
+                                </tr>
+                            </thead>
+                            <tbody id="userTicketsList">
+                                <!-- Tickets injected here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <script src="js/admin.js?v=V8"></script> 
+    <script src="js/admin.js?v=V9"></script> 
 </body>
 </html>

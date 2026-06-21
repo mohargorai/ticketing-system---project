@@ -291,6 +291,39 @@ app.get('/api/admin/analytics', requireAdmin, async (req, res) => {
 app.get('/api/admin/events', requireAdmin, async (req, res) => { res.json(await Event.find().sort({ startDate: -1 }).lean()); });
 app.get('/api/admin/users', requireAdmin, async (req, res) => { res.json(await User.find().select('-password').lean()); });
 
+app.put('/api/admin/users/:id/role', requireAdmin, async (req, res) => {
+    try {
+        const { secretKey } = req.body;
+        if (secretKey !== process.env.ADMIN_SECRET) return res.status(403).json({ success: false, message: "Invalid Secret Key." });
+        
+        const user = await User.findById(req.params.id);
+        if (!user) return res.status(404).json({ success: false, message: "User not found." });
+        
+        user.isAdmin = !user.isAdmin;
+        await user.save();
+        io.emit('dashboardUpdate');
+        res.json({ success: true, message: `User is now ${user.isAdmin ? 'Admin' : 'User'}.` });
+    } catch (err) { res.status(500).json({ success: false, message: "Error toggling role." }); }
+});
+
+app.get('/api/admin/users/:id/tickets', requireAdmin, async (req, res) => {
+    try {
+        const mySeats = await Seat.find({ userId: req.params.id }).populate('eventId', '-imageUrl').lean();
+        const tickets = mySeats.filter(s => s.eventId).map(seat => ({ 
+            eventId: seat.eventId._id, 
+            eventTitle: seat.eventId.title, 
+            bookingDate: seat.bookingDate, 
+            timeSlot: seat.timeSlot, 
+            location: seat.eventId.location, 
+            eventType: seat.eventId.eventType, 
+            price: seat.eventId.price || 0, 
+            seatId: seat.seatId,
+            endDate: seat.eventId.endDate 
+        }));
+        res.json({ success: true, tickets });
+    } catch (err) { res.status(500).json({ success: false, message: "Error fetching tickets." }); }
+});
+
 app.post('/api/admin/events', requireAdmin, async (req, res) => {
     try {
         let p = req.body; p.timeSlots = p.timeSlots ? p.timeSlots.split(',').map(s => s.trim()).filter(s => s) : ["12:00 PM"];

@@ -24,6 +24,73 @@ window.addEventListener('DOMContentLoaded', async () => {
     loadAnalytics();
     loadEvents();
     loadUsers();
+
+    // --- NEW FEATURES: Role Toggle & View Tickets ---
+    let currentRoleToggleUserId = null;
+
+    window.openRoleModal = function(userId, username) {
+        currentRoleToggleUserId = userId;
+        document.getElementById('roleToggleUsername').textContent = username;
+        document.getElementById('adminSecretKeyInput').value = '';
+        const modal = new bootstrap.Modal(document.getElementById('roleToggleModal'));
+        modal.show();
+    }
+
+    document.getElementById('confirmRoleBtn')?.addEventListener('click', async () => {
+        const secretKey = document.getElementById('adminSecretKeyInput').value;
+        if (!secretKey) return alert("Please enter the Admin Secret Key.");
+
+        try {
+            const res = await fetch(`/api/admin/users/${currentRoleToggleUserId}/role`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ secretKey })
+            });
+            const data = await res.json();
+            if (data.success) {
+                bootstrap.Modal.getInstance(document.getElementById('roleToggleModal')).hide();
+                // dashboardUpdate socket will trigger reloadUsers
+            } else {
+                alert(data.message || "Failed to toggle role.");
+            }
+        } catch (err) {
+            console.error("Error toggling role:", err);
+            alert("An error occurred.");
+        }
+    });
+
+    window.viewUserTickets = async function(userId, username) {
+        document.getElementById('ticketsUsername').textContent = username;
+        const listEl = document.getElementById('userTicketsList');
+        listEl.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Loading...</td></tr>';
+        
+        const modal = new bootstrap.Modal(document.getElementById('userTicketsModal'));
+        modal.show();
+
+        try {
+            const res = await fetch(`/api/admin/users/${userId}/tickets`);
+            const data = await res.json();
+            if (data.success) {
+                if (data.tickets.length === 0) {
+                    listEl.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No tickets found for this user.</td></tr>';
+                } else {
+                    listEl.innerHTML = data.tickets.map(t => `
+                        <tr>
+                            <td class="ps-3 fw-bold text-light">${t.eventTitle} <span class="badge bg-secondary ms-1">${t.eventType}</span></td>
+                            <td>${new Date(t.bookingDate).toLocaleDateString()} <br> <small class="text-info">${t.timeSlot}</small></td>
+                            <td><span class="badge bg-primary">${t.seatId}</span></td>
+                            <td class="text-end pe-3 fw-bold text-success">₹${t.price}</td>
+                        </tr>
+                    `).join('');
+                }
+            } else {
+                listEl.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Failed to load tickets.</td></tr>';
+            }
+        } catch (err) {
+            console.error("Error fetching tickets:", err);
+            listEl.innerHTML = '<tr><td colspan="4" class="text-center text-danger">An error occurred.</td></tr>';
+        }
+    }
 });
 
 document.getElementById('event-poster-file').addEventListener('change', function(e) {
@@ -363,7 +430,9 @@ window.renderUsers = function(users) {
         <tr>
             <td class="ps-4">${u.username}</td>
             <td>${u.isAdmin ? '<span class="badge bg-warning text-dark">Admin</span>' : '<span class="badge bg-secondary">User</span>'}</td>
-            <td class="text-center">
+            <td class="text-center text-nowrap">
+                <button class="btn btn-outline-info btn-sm fw-bold me-1" onclick="openRoleModal('${u._id}', '${u.username}')">Role</button>
+                <button class="btn btn-outline-success btn-sm fw-bold me-1" onclick="viewUserTickets('${u._id}', '${u.username}')">Tickets</button>
                 <button class="btn btn-outline-danger btn-sm fw-bold" onclick="deleteUser('${u._id}')">Remove</button>
             </td>
         </tr>
