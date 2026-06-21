@@ -385,3 +385,14 @@ h1, h2, h3, h4, h5, h6 { font-weight: 800; letter-spacing: -0.5px; color: var(--
         padding-bottom: 70px !important; /* Space for the bottom nav */
     }
 }
+
+ / *   A n i m a t e d   C h e v r o n   T o g g l e   * / 
+ b u t t o n [ d a t a - b s - t o g g l e = \  
+ c o l l a p s e \ ]   s v g   { 
+         t r a n s i t i o n :   t r a n s f o r m   0 . 3 s   c u b i c - b e z i e r ( 0 . 4 ,   0 ,   0 . 2 ,   1 ) ; 
+ } 
+ b u t t o n [ d a t a - b s - t o g g l e = \ c o l l a p s e \ ] [ a r i a - e x p a n d e d = \ t r u e \ ]   s v g   { 
+         t r a n s f o r m :   r o t a t e ( 1 8 0 d e g ) ; 
+ } 
+  
+ 
