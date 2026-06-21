@@ -267,7 +267,7 @@ app.post('/api/seats/lock', verifyActiveUser, async (req, res) => {
                     existing.userId = req.session.userId;
                     existing.lockedAt = now;
                     await existing.save();
-                    io.emit('seatUpdate', { eventId, date, timeSlot });
+                    io.emit('seatUpdate', { eventId, date, timeSlot, seatId, status: 'Locked' });
                     return res.json({ success: true });
                 } else if (String(existing.userId) === String(req.session.userId)) {
                     existing.lockedAt = now;
@@ -279,7 +279,7 @@ app.post('/api/seats/lock', verifyActiveUser, async (req, res) => {
             }
         } else {
             await Seat.create({ eventId, seatId, bookingDate: date, timeSlot, status: 'Locked', userId: req.session.userId, lockedAt: now });
-            io.emit('seatUpdate', { eventId, date, timeSlot });
+            io.emit('seatUpdate', { eventId, date, timeSlot, seatId, status: 'Locked' });
             return res.json({ success: true });
         }
     } catch (err) {
@@ -291,7 +291,7 @@ app.post('/api/seats/lock', verifyActiveUser, async (req, res) => {
 app.post('/api/seats/unlock', verifyActiveUser, async (req, res) => {
     const { eventId, seatId, date, timeSlot } = req.body;
     await Seat.deleteOne({ eventId, seatId, bookingDate: date, timeSlot, userId: req.session.userId, status: 'Locked' });
-    io.emit('seatUpdate', { eventId, date, timeSlot });
+    io.emit('seatUpdate', { eventId, date, timeSlot, seatId, status: 'Available' });
     res.json({ success: true });
 });
 

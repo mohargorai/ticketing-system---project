@@ -47,7 +47,29 @@ const socket = typeof io !== 'undefined' ? io() : null;
 if (socket) {
     socket.on('seatUpdate', async (data) => {
         if (String(currentEventId) === String(data.eventId) && currentSelectedDate === data.date && currentSelectedTime === data.timeSlot) {
-            await loadEventDataForDateAndTime(currentSelectedDate, currentSelectedTime, true); 
+            if (data.seatId && data.status) {
+                const seatMapEl = document.getElementById('seat-map');
+                if (seatMapEl) {
+                    const btn = seatMapEl.querySelector(`button[data-id="${data.seatId}"]`);
+                    if (btn) {
+                        if (data.status === 'Available') {
+                            btn.classList.remove('booked', 'disabled', 'selected');
+                            btn.classList.add('available');
+                        } else if (data.status === 'Locked') {
+                            if (!btn.classList.contains('selected')) {
+                                btn.classList.remove('available', 'selected');
+                                btn.classList.add('booked', 'disabled');
+                            }
+                        } else if (data.status === 'Booked') {
+                            btn.classList.remove('available', 'selected');
+                            btn.classList.add('booked', 'disabled');
+                        }
+                        updateOrderSummary();
+                    }
+                }
+            } else {
+                await loadEventDataForDateAndTime(currentSelectedDate, currentSelectedTime, true); 
+            }
         }
     });
     socket.on('eventUpdate', async () => { await refreshGlobalEvents(); });
