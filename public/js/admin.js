@@ -7,7 +7,7 @@ const cancelBtn = document.getElementById('event-cancel-btn');
 // Global variable to hold our Chart instance
 let revenueChartInstance = null;
 
-// 🎨 Set Global Chart.js Typography to match the VibePass Aesthetic
+// 🎨 Set Global Chart.js Typography to match the TicketHub Aesthetic
 Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
 Chart.defaults.color = '#a1a1aa';
 
