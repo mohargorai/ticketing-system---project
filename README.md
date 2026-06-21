@@ -1,6 +1,6 @@
 <div align="center">
   
-  # 🎟️ TicketHub
+  # <img src="public/favicon.svg" width="40" alt="Icon" /> VibePass
   
   **A High-Performance, Real-Time Event Ticketing Engine**
 
@@ -20,9 +20,9 @@
 
 ## 📖 About The Project
 
-TicketHub is a scalable, full-stack Single Page Application (SPA) designed to handle high-concurrency event bookings. Architected to eliminate race conditions, the platform features bi-directional live seat synchronization, in-memory caching for high-traffic resiliency, dynamic time-slot routing, and a secure, data-driven admin CMS.
+VibePass is a scalable, full-stack Single Page Application (SPA) designed to handle high-concurrency event bookings. Architected to eliminate race conditions, the platform features bi-directional live seat synchronization, in-memory caching for high-traffic resiliency, dynamic time-slot routing, and a secure, data-driven admin CMS.
 
-Whether managing a massive stadium concert or a local cinema chain, TicketHub ensures a seamless, crash-resilient experience for both administrators and end-users.
+Whether managing a massive stadium concert or a local cinema chain, VibePass ensures a seamless, crash-resilient experience for both administrators and end-users.
 
 ---
 
