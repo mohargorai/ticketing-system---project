@@ -201,19 +201,98 @@ app.get('/api/events/:eventId/availability', async (req, res) => {
     const { date, timeSlot } = req.query;
     if (!date || !timeSlot) return res.status(400).json({error: "Required"});
     const event = await Event.findById(req.params.eventId).select('capacity').lean();
-    const sold = await Seat.countDocuments({ eventId: req.params.eventId, bookingDate: date, timeSlot });
+    
+    const fiveMinsAgo = new Date(Date.now() - 5 * 60 * 1000);
+    const sold = await Seat.countDocuments({ 
+        eventId: req.params.eventId, bookingDate: date, timeSlot, 
+        $or: [ { status: 'Booked' }, { status: 'Locked', lockedAt: { $gt: fiveMinsAgo } } ] 
+    });
+    
     res.json({ capacity: event.capacity, sold, available: event.capacity - sold });
 });
 
 app.get('/api/seats/:eventId', async (req, res) => {
     const { date, timeSlot } = req.query;
     const event = await Event.findById(req.params.eventId).select('capacity').lean();
-    const bookedSeats = await Seat.find({ eventId: req.params.eventId, bookingDate: date, timeSlot }).select('seatId').lean();
-    const bookedSeatIds = bookedSeats.map(s => s.seatId);
+    const seatsData = await Seat.find({ eventId: req.params.eventId, bookingDate: date, timeSlot }).lean();
     
+    const now = new Date();
+    const fiveMinutes = 5 * 60 * 1000;
+    const seatMap = new Map();
+    const expiredLocks = [];
+
+    seatsData.forEach(seat => {
+        if (seat.status === 'Locked') {
+            if (now - new Date(seat.lockedAt) > fiveMinutes) {
+                expiredLocks.push(seat._id);
+            } else {
+                if (req.session.userId && String(seat.userId) === String(req.session.userId)) {
+                    seatMap.set(seat.seatId, 'LockedByMe');
+                } else {
+                    seatMap.set(seat.seatId, 'Locked');
+                }
+            }
+        } else {
+            seatMap.set(seat.seatId, seat.status);
+        }
+    });
+
+    if (expiredLocks.length > 0) {
+        Seat.deleteMany({ _id: { $in: expiredLocks } }).catch(console.error);
+    }
+
     const allSeats = [];
-    for(let i=1; i<=event.capacity; i++) allSeats.push({ seatId: `S${i}`, status: bookedSeatIds.includes(`S${i}`) ? 'Booked' : 'Available' });
+    for(let i=1; i<=event.capacity; i++) {
+        const sId = `S${i}`;
+        allSeats.push({ seatId: sId, status: seatMap.get(sId) || 'Available' });
+    }
     res.json(allSeats);
+});
+
+app.post('/api/seats/lock', verifyActiveUser, async (req, res) => {
+    const { eventId, seatId, date, timeSlot } = req.body;
+    
+    const myLocks = await Seat.countDocuments({ eventId, bookingDate: date, timeSlot, userId: req.session.userId, status: 'Locked' });
+    if (myLocks >= 10) return res.status(400).json({ success: false, message: "You can only lock up to 10 seats at a time." });
+
+    try {
+        const existing = await Seat.findOne({ eventId, seatId, bookingDate: date, timeSlot });
+        const now = new Date();
+        const fiveMinutes = 5 * 60 * 1000;
+
+        if (existing) {
+            if (existing.status === 'Booked') return res.status(400).json({ success: false, message: "Seat already taken!" });
+            if (existing.status === 'Locked') {
+                if (now - new Date(existing.lockedAt) > fiveMinutes) {
+                    existing.userId = req.session.userId;
+                    existing.lockedAt = now;
+                    await existing.save();
+                    io.emit('seatUpdate', { eventId, date, timeSlot });
+                    return res.json({ success: true });
+                } else if (String(existing.userId) === String(req.session.userId)) {
+                    existing.lockedAt = now;
+                    await existing.save();
+                    return res.json({ success: true });
+                } else {
+                    return res.status(400).json({ success: false, message: "Seat currently held by someone else." });
+                }
+            }
+        } else {
+            await Seat.create({ eventId, seatId, bookingDate: date, timeSlot, status: 'Locked', userId: req.session.userId, lockedAt: now });
+            io.emit('seatUpdate', { eventId, date, timeSlot });
+            return res.json({ success: true });
+        }
+    } catch (err) {
+        if (err.code === 11000) return res.status(400).json({ success: false, message: "Seat snatched! Please refresh." });
+        res.status(500).json({ success: false, message: "Error locking seat." });
+    }
+});
+
+app.post('/api/seats/unlock', verifyActiveUser, async (req, res) => {
+    const { eventId, seatId, date, timeSlot } = req.body;
+    await Seat.deleteOne({ eventId, seatId, bookingDate: date, timeSlot, userId: req.session.userId, status: 'Locked' });
+    io.emit('seatUpdate', { eventId, date, timeSlot });
+    res.json({ success: true });
 });
 
 // ==========================================
@@ -222,14 +301,21 @@ app.get('/api/seats/:eventId', async (req, res) => {
 app.post('/api/events/book-seats', verifyActiveUser, async (req, res) => {
     const { eventId, seats, selectedDate, timeSlot } = req.body; 
     try {
-        const seatsToInsert = seats.map(seatId => ({ eventId, seatId, bookingDate: selectedDate, timeSlot, status: 'Booked', bookedBy: req.session.username, userId: req.session.userId }));
-        await Seat.insertMany(seatsToInsert, { ordered: true });
+        const result = await Seat.updateMany(
+            { eventId, seatId: { $in: seats }, bookingDate: selectedDate, timeSlot, userId: req.session.userId, status: 'Locked' },
+            { $set: { status: 'Booked', bookedBy: req.session.username, lockedAt: null } }
+        );
+        
+        if (result.modifiedCount !== seats.length) {
+            return res.status(400).json({ success: false, message: "Some selected seats expired or were snatched. Please refresh and try again." });
+        }
+
         await Event.findByIdAndUpdate(eventId, { $inc: { ticketsSold: seats.length } });
         
         clearEventsCache(); 
         io.emit('seatUpdate', { eventId, date: selectedDate, timeSlot }); io.emit('dashboardUpdate'); 
         res.json({ success: true, message: `Successfully booked ${seats.length} seat(s)!` });
-    } catch (err) { res.status(400).json({ success: false, message: "Seat snatched! Please refresh." }); }
+    } catch (err) { res.status(400).json({ success: false, message: "Checkout failed. Please try again." }); }
 });
 
 app.post('/api/events/book-general', verifyActiveUser, async (req, res) => {

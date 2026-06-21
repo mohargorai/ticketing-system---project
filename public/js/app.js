@@ -812,10 +812,13 @@ async function renderSeatsForEvent(eventId, date, time, isSoftUpdate = false) {
                 const btn = seatMapEl.querySelector(`button[data-id="${seat.seatId}"]`);
                 if (btn) {
                     if (seat.status === 'Available') {
-                        btn.classList.remove('booked', 'disabled');
+                        btn.classList.remove('booked', 'disabled', 'selected');
                         btn.classList.add('available');
+                    } else if (seat.status === 'LockedByMe') {
+                        btn.classList.remove('booked', 'disabled');
+                        btn.classList.add('available', 'selected');
                     } else {
-                        btn.classList.remove('available');
+                        btn.classList.remove('available', 'selected');
                         btn.classList.add('booked', 'disabled');
                         if (btn.classList.contains('selected')) {
                             btn.classList.remove('selected');
@@ -847,7 +850,10 @@ async function renderSeatsForEvent(eventId, date, time, isSoftUpdate = false) {
                 if (j === halfRow) rowHtml += `<div style="width: 30px; flex-shrink: 0;"></div>`; 
                 if (j >= startIndex && seatIdx < rowSeats.length) {
                     let seat = rowSeats[seatIdx];
-                    let classes = 'bms-seat ' + (seat.status === 'Available' ? 'available' : 'booked disabled');
+                    let classes = 'bms-seat ';
+                    if (seat.status === 'Available') classes += 'available';
+                    else if (seat.status === 'LockedByMe') classes += 'available selected';
+                    else classes += 'booked disabled';
                     let dNum = seat.seatId.replace(/\D/g, ''); 
                     if(dNum.length === 1) dNum = '0' + dNum;
                     rowHtml += `<button class="${classes}" data-id="${seat.seatId}">${dNum}</button>`;
@@ -915,10 +921,42 @@ function updateOrderSummary(reset = false) {
     totalText.innerText = finalTotal.toFixed(2);
 }
 
-safeBind('seat-map', 'click', (e) => {
-    if (e.target.classList.contains('bms-seat') && e.target.classList.contains('available')) {
-        e.target.classList.toggle('selected');
-        updateOrderSummary();
+safeBind('seat-map', 'click', async (e) => {
+    if (e.target.classList.contains('bms-seat')) {
+        const btn = e.target;
+        const seatId = btn.getAttribute('data-id');
+        if (!seatId) return;
+
+        if (btn.classList.contains('available') && !btn.classList.contains('selected')) {
+            try {
+                const res = await fetch('/api/seats/lock', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ eventId: currentEventId, seatId, date: currentSelectedDate, timeSlot: currentSelectedTime })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    btn.classList.add('selected');
+                    updateOrderSummary();
+                } else {
+                    alert(data.message);
+                    await loadEventDataForDateAndTime(currentSelectedDate, currentSelectedTime, true);
+                }
+            } catch (err) { console.error(err); }
+        } else if (btn.classList.contains('selected')) {
+            try {
+                const res = await fetch('/api/seats/unlock', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ eventId: currentEventId, seatId, date: currentSelectedDate, timeSlot: currentSelectedTime })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    btn.classList.remove('selected');
+                    updateOrderSummary();
+                }
+            } catch (err) { console.error(err); }
+        }
     }
 });
 
