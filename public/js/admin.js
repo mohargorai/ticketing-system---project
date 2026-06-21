@@ -363,15 +363,8 @@ window.renderUsers = function(users) {
         <tr>
             <td class="ps-4">${u.username}</td>
             <td>${u.isAdmin ? '<span class="badge bg-warning text-dark">Admin</span>' : '<span class="badge bg-secondary">User</span>'}</td>
-            <td class="text-center pe-3 pe-md-4">
-                <div class="dropdown">
-                    <button class="btn btn-link text-muted p-0 text-decoration-none fs-5" data-bs-toggle="dropdown" aria-expanded="false">⋮</button>
-                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow-lg" style="border-color: #262626;">
-                        <li><button class="dropdown-item fw-bold text-white py-2" onclick="toggleUserRole('${u._id}')">🛡️ Toggle Admin Role</button></li>
-                        <li><hr class="dropdown-divider border-secondary opacity-25 my-1"></li>
-                        <li><button class="dropdown-item text-danger fw-bold py-2" onclick="deleteUser('${u._id}')">🗑️ Remove User</button></li>
-                    </ul>
-                </div>
+            <td class="text-center">
+                <button class="btn btn-outline-danger btn-sm fw-bold" onclick="deleteUser('${u._id}')">Remove</button>
             </td>
         </tr>
     `).join('');
@@ -520,22 +513,6 @@ window.deleteUser = async function(id) {
         }
     } catch (err) {
         alert("Failed to delete user.");
-    }
-}
-
-window.toggleUserRole = async function(id) {
-    if (!confirm("Are you sure you want to change this user's role?")) return;
-
-    try {
-        const res = await fetch(`/api/admin/users/${id}/role`, { method: 'PUT' });
-        const data = await res.json();
-        if (data.success) {
-            loadUsers();
-        } else {
-            alert(data.message);
-        }
-    } catch (err) {
-        alert("Failed to change user role.");
     }
 }
 

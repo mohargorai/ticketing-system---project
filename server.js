@@ -310,22 +310,6 @@ app.delete('/api/admin/events/:id', requireAdmin, async (req, res) => {
     catch (err) { res.status(500).json({ success: false, message: "Error" }); }
 });
 
-app.put('/api/admin/users/:id/role', requireAdmin, async (req, res) => {
-    try {
-        if (req.params.id === req.session.userId) {
-            return res.status(400).json({ success: false, message: "Cannot change your own role." });
-        }
-        const user = await User.findById(req.params.id);
-        if (!user) return res.status(404).json({ success: false, message: "User not found." });
-        
-        user.isAdmin = !user.isAdmin;
-        await user.save();
-        res.json({ success: true, message: `Role updated to ${user.isAdmin ? 'Admin' : 'User'}.` });
-    } catch (err) {
-        res.status(500).json({ success: false, message: 'Server error' });
-    }
-});
-
 app.delete('/api/admin/users/:id', requireAdmin, async (req, res) => {
     try {
         const userSeats = await Seat.find({ userId: req.params.id });
