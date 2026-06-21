@@ -344,3 +344,44 @@ h1, h2, h3, h4, h5, h6 { font-weight: 800; letter-spacing: -0.5px; color: var(--
     .ticket-receipt-divider::after { right: -21px; clip-path: polygon(0% 0%, 50% 0%, 50% 100%, 0% 100%); }
 }
 
+/* MOBILE BOTTOM NAV */
+.mobile-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(24, 24, 27, 0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid var(--border-color);
+    padding: 10px 15px;
+    z-index: 1050;
+    justify-content: space-around;
+    align-items: center;
+}
+.nav-item-mobile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+.nav-item-mobile .icon {
+    font-size: 20px;
+    margin-bottom: 2px;
+}
+.nav-item-mobile.active {
+    color: var(--brand-primary);
+}
+.nav-item-mobile.active .icon {
+    transform: scale(1.1);
+}
+
+@media (max-width: 768px) {
+    body {
+        padding-bottom: 70px !important; /* Space for the bottom nav */
+    }
+}

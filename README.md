@@ -34,8 +34,8 @@ Whether managing a massive stadium concert or a local cinema chain, TicketHub en
 - 🔴 **Bi-Directional Live State** – Powered by Socket.io, every booking or event creation instantly broadcasts to all global clients without polling.
 - 🛡️ **ACID-Compliant Concurrency** – Utilizes MongoDB atomic `$inc` operators and strict compound indexing (`eventId + seatId + bookingDate + timeSlot`) to prevent millisecond race conditions.
 - 🚀 **Redis Caching** – High-traffic event feeds are served from memory to reduce database load, featuring automated cache invalidation logic.
+- 📱 **Mobile-First Responsive Design** – Features a dynamic glassmorphic bottom navigation dock, off-canvas menus, and fully adaptive layouts ensuring a flawless experience on all screen sizes.
 - 🎟️ **Dynamic Passes & PDFs** – Client-side QR generation (`qrcodejs`) and customized perforated stub PDFs (`jsPDF`) offset heavy backend document rendering.
-
 ---
 
 ## 💻 Tech Stack
