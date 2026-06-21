@@ -928,6 +928,10 @@ safeBind('seat-map', 'click', async (e) => {
         if (!seatId) return;
 
         if (btn.classList.contains('available') && !btn.classList.contains('selected')) {
+            // Optimistic UI Update - Instant feedback
+            btn.classList.add('selected');
+            updateOrderSummary();
+            
             try {
                 const res = await fetch('/api/seats/lock', {
                     method: 'POST',
@@ -935,15 +939,23 @@ safeBind('seat-map', 'click', async (e) => {
                     body: JSON.stringify({ eventId: currentEventId, seatId, date: currentSelectedDate, timeSlot: currentSelectedTime })
                 });
                 const data = await res.json();
-                if (data.success) {
-                    btn.classList.add('selected');
+                if (!data.success) {
+                    // Revert on failure
+                    btn.classList.remove('selected');
                     updateOrderSummary();
-                } else {
                     alert(data.message);
                     await loadEventDataForDateAndTime(currentSelectedDate, currentSelectedTime, true);
                 }
-            } catch (err) { console.error(err); }
+            } catch (err) { 
+                console.error(err); 
+                btn.classList.remove('selected');
+                updateOrderSummary();
+            }
         } else if (btn.classList.contains('selected')) {
+            // Optimistic UI Update - Instant feedback
+            btn.classList.remove('selected');
+            updateOrderSummary();
+            
             try {
                 const res = await fetch('/api/seats/unlock', {
                     method: 'POST',
@@ -951,11 +963,16 @@ safeBind('seat-map', 'click', async (e) => {
                     body: JSON.stringify({ eventId: currentEventId, seatId, date: currentSelectedDate, timeSlot: currentSelectedTime })
                 });
                 const data = await res.json();
-                if (data.success) {
-                    btn.classList.remove('selected');
+                if (!data.success) {
+                    // Revert on failure
+                    btn.classList.add('selected');
                     updateOrderSummary();
                 }
-            } catch (err) { console.error(err); }
+            } catch (err) { 
+                console.error(err);
+                btn.classList.add('selected');
+                updateOrderSummary();
+            }
         }
     }
 });
