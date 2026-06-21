@@ -776,7 +776,7 @@ async function loadEventDataForDateAndTime(date, time, isSoftUpdate = false) {
         if (currentEventType === 'Seated') {
             if(gView) gView.classList.add('d-none'); 
             if(sView) sView.classList.remove('d-none');
-            await renderSeatsForEvent(currentEventId, date, time);
+            await renderSeatsForEvent(currentEventId, date, time, isSoftUpdate);
         } else {
             if(sView) sView.classList.add('d-none'); 
             if(gView) gView.classList.remove('d-none');
@@ -795,15 +795,41 @@ async function loadEventDataForDateAndTime(date, time, isSoftUpdate = false) {
     } catch (err) { console.error("Data error."); }
 }
 
-async function renderSeatsForEvent(eventId, date, time) {
+async function renderSeatsForEvent(eventId, date, time, isSoftUpdate = false) {
     const seatMapEl = document.getElementById('seat-map');
     if(!seatMapEl) return;
 
     try {
-        seatMapEl.innerHTML = '<p class="text-muted text-center mt-3">Loading layout...</p>';
+        if (!isSoftUpdate) {
+            seatMapEl.innerHTML = '<p class="text-muted text-center mt-3">Loading layout...</p>';
+        }
         const res = await fetch(`/api/seats/${eventId}?date=${date}&timeSlot=${time}&t=${new Date().getTime()}`);
         let seats = await res.json();
         
+        if (isSoftUpdate) {
+            let selectionChanged = false;
+            seats.forEach(seat => {
+                const btn = seatMapEl.querySelector(`button[data-id="${seat.seatId}"]`);
+                if (btn) {
+                    if (seat.status === 'Available') {
+                        btn.classList.remove('booked', 'disabled');
+                        btn.classList.add('available');
+                    } else {
+                        btn.classList.remove('available');
+                        btn.classList.add('booked', 'disabled');
+                        if (btn.classList.contains('selected')) {
+                            btn.classList.remove('selected');
+                            selectionChanged = true;
+                        }
+                    }
+                }
+            });
+            if (selectionChanged) {
+                updateOrderSummary();
+            }
+            return;
+        }
+
         const seatsPerRow = 14; const halfRow = seatsPerRow / 2;
         const rowsHtmlArray = [];
 
