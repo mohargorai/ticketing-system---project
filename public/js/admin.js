@@ -93,6 +93,24 @@ window.addEventListener('DOMContentLoaded', async () => {
             listEl.innerHTML = '<tr><td colspan="4" class="text-center text-danger">An error occurred.</td></tr>';
         }
     }
+
+    // --- CHEVRON ROTATION LOGIC ---
+    document.querySelectorAll('.collapse').forEach(col => {
+        col.addEventListener('show.bs.collapse', function() {
+            const btn = document.querySelector(`[data-bs-target="#${this.id}"] svg`);
+            if (btn) {
+                btn.style.transition = 'transform 0.3s ease';
+                btn.style.transform = 'rotate(180deg)';
+            }
+        });
+        col.addEventListener('hide.bs.collapse', function() {
+            const btn = document.querySelector(`[data-bs-target="#${this.id}"] svg`);
+            if (btn) {
+                btn.style.transition = 'transform 0.3s ease';
+                btn.style.transform = 'rotate(0deg)';
+            }
+        });
+    });
 });
 
 document.getElementById('event-poster-file').addEventListener('change', function(e) {
