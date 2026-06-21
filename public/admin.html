@@ -222,9 +222,9 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body text-white">
-                    <p>You are about to toggle the role for <strong id="roleToggleUsername" class="text-warning"></strong>.</p>
+                    <p id="roleToggleText"></p>
                     <p class="mb-2">Please enter the Admin Secret Key to confirm this action:</p>
-                    <input type="password" id="adminSecretKeyInput" class="form-control bg-dark text-white border-secondary" placeholder="Admin Secret Key">
+                    <input type="text" style="-webkit-text-security: disc;" id="adminSecretKeyInput" class="form-control bg-dark text-white border-secondary" placeholder="Admin Secret Key" autocomplete="off" data-lpignore="true" data-1p-ignore="true">
                 </div>
                 <div class="modal-footer border-secondary">
                     <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">Cancel</button>
@@ -271,6 +271,6 @@
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <script src="js/admin.js?v=V9"></script> 
+    <script src="js/admin.js?v=V10"></script> 
 </body>
 </html>

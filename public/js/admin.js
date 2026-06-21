@@ -28,9 +28,11 @@ window.addEventListener('DOMContentLoaded', async () => {
     // --- NEW FEATURES: Role Toggle & View Tickets ---
     let currentRoleToggleUserId = null;
 
-    window.openRoleModal = function(userId, username) {
+    window.openRoleModal = function(userId, username, isAdmin) {
         currentRoleToggleUserId = userId;
-        document.getElementById('roleToggleUsername').textContent = username;
+        const targetRole = isAdmin ? 'User' : 'Admin';
+        const actionText = isAdmin ? 'demote' : 'promote';
+        document.getElementById('roleToggleText').innerHTML = `You are about to <strong class="text-${isAdmin ? 'danger' : 'success'}">${actionText}</strong> <strong class="text-warning">${username}</strong> to <strong>${targetRole}</strong>.`;
         document.getElementById('adminSecretKeyInput').value = '';
         const modal = new bootstrap.Modal(document.getElementById('roleToggleModal'));
         modal.show();
@@ -431,7 +433,7 @@ window.renderUsers = function(users) {
             <td class="ps-4">${u.username}</td>
             <td>${u.isAdmin ? '<span class="badge bg-warning text-dark">Admin</span>' : '<span class="badge bg-secondary">User</span>'}</td>
             <td class="text-center text-nowrap">
-                <button class="btn btn-outline-info btn-sm fw-bold me-1" onclick="openRoleModal('${u._id}', '${u.username}')">Role</button>
+                <button class="btn btn-outline-info btn-sm fw-bold me-1" onclick="openRoleModal('${u._id}', '${u.username}', ${u.isAdmin})">Role</button>
                 <button class="btn btn-outline-success btn-sm fw-bold me-1" onclick="viewUserTickets('${u._id}', '${u.username}')">Tickets</button>
                 <button class="btn btn-outline-danger btn-sm fw-bold" onclick="deleteUser('${u._id}')">Remove</button>
             </td>
