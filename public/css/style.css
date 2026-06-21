@@ -263,7 +263,7 @@ option { background-color: #18181b !important; color: white !important; }
     color: var(--text-muted); cursor: pointer; margin: 0 5px; transition: all 0.3s var(--ease-bouncy); 
 }
 .bms-seat.available { border-color: rgba(255,255,255,0.2); }
-.bms-seat.available:hover { background: rgba(255,255,255,0.1); color: white; transform: scale(1.15) translateY(-2px); border-color: var(--brand-primary); }
+.bms-seat.available:not(.selected):hover { background: rgba(255,255,255,0.1); color: white; transform: scale(1.15) translateY(-2px); border-color: var(--brand-primary); }
 .bms-seat.selected { 
     background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary)); 
     color: white; border-color: transparent; box-shadow: 0 6px 15px var(--brand-glow); transform: scale(1.15) translateY(-2px); 
@@ -459,7 +459,7 @@ option { background-color: #18181b !important; color: white !important; }
     color: var(--text-muted); cursor: pointer; margin: 0 5px; transition: all 0.3s var(--ease-bouncy); 
 }
 .bms-seat.available { border-color: rgba(255,255,255,0.2); }
-.bms-seat.available:hover { background: rgba(255,255,255,0.1); color: white; transform: scale(1.15) translateY(-2px); border-color: var(--brand-primary); }
+.bms-seat.available:not(.selected):hover { background: rgba(255,255,255,0.1); color: white; transform: scale(1.15) translateY(-2px); border-color: var(--brand-primary); }
 .bms-seat.selected { 
     background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary)); 
     color: white; border-color: transparent; box-shadow: 0 6px 15px var(--brand-glow); transform: scale(1.15) translateY(-2px); 
