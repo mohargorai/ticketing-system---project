@@ -346,8 +346,7 @@ async function loadEvents() {
             let catColor = 'bg-secondary text-white';
             if (e.category === 'Movie') catColor = 'bg-primary bg-opacity-25 text-primary border border-primary border-opacity-25';
             else if (e.category === 'Concert') catColor = 'bg-danger bg-opacity-25 text-danger border border-danger border-opacity-25';
-            else if (e.category === 'Standup') catColor = 'bg-success bg-opacity-25 text-success border border-success border-opacity-25';
-            else if (e.category === 'Theater') catColor = 'bg-warning bg-opacity-25 text-warning border border-warning border-opacity-25';
+            else if (e.category === 'Theater' || e.category === 'Standup Comedy') catColor = 'bg-warning bg-opacity-25 text-warning border border-warning border-opacity-25';
             
             let catBadge = e.category ? `<span class="badge ${catColor} ms-3 rounded-pill" style="font-size: 10px; padding: 4px 10px; letter-spacing: 0.5px;">${e.category}</span>` : '';
 
