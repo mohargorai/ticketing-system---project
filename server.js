@@ -115,7 +115,7 @@ app.post('/api/signup', async (req, res) => {
         const { username, password } = req.body;
         if (!username || !password) return res.status(400).json({ success: false, message: "Fields required." });
         const existingUser = await User.findOne({ username: { $regex: new RegExp(`^${username.trim()}$`, 'i') } }).lean();
-        if (existingUser) return res.status(400).json({ success: false, message: "Username is not available. Try another one (same full name is okay, but no same username)." });
+        if (existingUser) return res.status(400).json({ success: false, message: "it's not available try something else" });
         await User.create({ username: username.trim(), password: await bcrypt.hash(password, 10), isAdmin: false });
         io.emit('dashboardUpdate'); res.json({ success: true, message: "Account created!" });
     } catch (err) { res.status(500).json({ success: false, message: "Server error." }); }
@@ -126,7 +126,7 @@ app.post('/api/admin/signup', async (req, res) => {
         const { username, password, secretKey } = req.body;
         if (secretKey !== process.env.ADMIN_SECRET) return res.status(403).json({ success: false, message: "Invalid Secret Key." });
         const existingUser = await User.findOne({ username: { $regex: new RegExp(`^${username.trim()}$`, 'i') } }).lean();
-        if (existingUser) return res.status(400).json({ success: false, message: "Username is not available. Try another one (same full name is okay, but no same username)." });
+        if (existingUser) return res.status(400).json({ success: false, message: "it's not available try something else" });
         await User.create({ username: username.trim(), password: await bcrypt.hash(password, 10), isAdmin: true });
         io.emit('dashboardUpdate'); res.json({ success: true, message: "Admin account created." });
     } catch (err) { res.status(500).json({ success: false, message: "Server error." }); }
