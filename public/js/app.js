@@ -1423,7 +1423,7 @@ function showTicketDetail(ticketData) {
             doc.setFont("helvetica", "bold");
             doc.text(ticketData.bookingRef, 172.5, 85, { align: "center" });
 
-            doc.save(`TicketHub_${ticketData.bookingRef}.pdf`);
+            doc.save(`VibePass_${ticketData.bookingRef}.pdf`);
 
             btn.innerHTML = originalText;
             btn.disabled = false;

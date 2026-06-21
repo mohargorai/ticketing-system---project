@@ -85,7 +85,7 @@ h1, h2, h3, h4, h5, h6 { font-weight: 800; letter-spacing: -0.5px; color: var(--
 .navbar-brand { font-size: 1.6rem; font-weight: 800; color: white !important; letter-spacing: -1px; display: inline-flex; align-items: center;}
 .navbar-brand:hover div { animation: float 2s ease-in-out infinite; }
 
-/* TICKETHUB BUTTONS */
+/* VIBEPASS BUTTONS */
 .btn { 
     border-radius: var(--radius-pill); 
     font-weight: 600; 
