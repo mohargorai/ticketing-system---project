@@ -230,9 +230,8 @@ option { background-color: #18181b !important; color: white !important; }
     background: var(--surface-card); border: 1px solid var(--border-color); color: var(--text-muted); 
     padding: 12px 20px; border-radius: var(--radius-md); min-width: 100px; text-align: center; 
     cursor: pointer; transition: all 0.3s var(--ease-bouncy); flex-shrink: 0; backdrop-filter: var(--glass-blur);
-    margin: 6px;
 }
-.district-date-pill:hover { border-color: var(--brand-primary); color: white; transform: translateY(-3px); }
+.district-date-pill:hover { border-color: var(--brand-primary); color: white; background: rgba(99, 102, 241, 0.15); box-shadow: 0 0 15px rgba(99, 102, 241, 0.2); }
 .district-date-pill.active { 
     background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary)); 
     border-color: transparent; color: white; box-shadow: 0 8px 20px var(--brand-glow); 
@@ -245,13 +244,12 @@ option { background-color: #18181b !important; color: white !important; }
     padding: 12px 24px; border-radius: var(--radius-pill); font-weight: 700; font-size: 15px; cursor: pointer;
     transition: all 0.3s var(--ease-bouncy); display: flex; flex-direction: column; align-items: center; 
     backdrop-filter: var(--glass-blur);
-    margin: 6px;
 }
 .time-slot-pill.status-green { border-color: rgba(16, 185, 129, 0.4); }
 .time-slot-pill.status-yellow { border-color: rgba(245, 158, 11, 0.4); }
 .time-slot-pill.status-red { border-color: rgba(244, 63, 94, 0.4); }
 .time-slot-pill.status-sold-out { opacity: 0.4; pointer-events: none; }
-.time-slot-pill:hover:not(.status-sold-out) { transform: translateY(-4px) scale(1.05); border-color: var(--brand-primary); }
+.time-slot-pill:hover:not(.status-sold-out) { border-color: var(--brand-primary); color: white; background: rgba(99, 102, 241, 0.15); box-shadow: 0 0 15px rgba(99, 102, 241, 0.2); }
 .time-slot-pill.active { 
     background: var(--brand-primary); border-color: var(--brand-primary); color: white; 
     box-shadow: 0 8px 20px var(--brand-glow); 
@@ -429,7 +427,7 @@ option { background-color: #18181b !important; color: white !important; }
     padding: 12px 20px; border-radius: var(--radius-md); min-width: 100px; text-align: center; 
     cursor: pointer; transition: all 0.3s var(--ease-bouncy); flex-shrink: 0; backdrop-filter: var(--glass-blur);
 }
-.district-date-pill:hover { border-color: var(--brand-primary); color: white; transform: translateY(-3px); }
+.district-date-pill:hover { border-color: var(--brand-primary); color: white; background: rgba(99, 102, 241, 0.15); box-shadow: 0 0 15px rgba(99, 102, 241, 0.2); }
 .district-date-pill.active { 
     background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary)); 
     border-color: transparent; color: white; box-shadow: 0 8px 20px var(--brand-glow); 
@@ -442,13 +440,12 @@ option { background-color: #18181b !important; color: white !important; }
     padding: 12px 24px; border-radius: var(--radius-pill); font-weight: 700; font-size: 15px; cursor: pointer;
     transition: all 0.3s var(--ease-bouncy); display: flex; flex-direction: column; align-items: center; 
     backdrop-filter: var(--glass-blur);
-    margin: 6px;
 }
 .time-slot-pill.status-green { border-color: rgba(16, 185, 129, 0.4); }
 .time-slot-pill.status-yellow { border-color: rgba(245, 158, 11, 0.4); }
 .time-slot-pill.status-red { border-color: rgba(244, 63, 94, 0.4); }
 .time-slot-pill.status-sold-out { opacity: 0.4; pointer-events: none; }
-.time-slot-pill:hover:not(.status-sold-out) { transform: translateY(-4px) scale(1.05); border-color: var(--brand-primary); }
+.time-slot-pill:hover:not(.status-sold-out) { border-color: var(--brand-primary); color: white; background: rgba(99, 102, 241, 0.15); box-shadow: 0 0 15px rgba(99, 102, 241, 0.2); }
 .time-slot-pill.active { 
     background: var(--brand-primary); border-color: var(--brand-primary); color: white; 
     box-shadow: 0 8px 20px var(--brand-glow); 
