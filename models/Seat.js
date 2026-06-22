@@ -14,4 +14,8 @@ const seatSchema = new mongoose.Schema({
 // 🚨 FIXED: Compound Index now allows the SAME seat on the SAME date to be booked at DIFFERENT times
 seatSchema.index({ eventId: 1, seatId: 1, bookingDate: 1, timeSlot: 1 }, { unique: true });
 
+// 🚨 FIXED: Performance Indexes for rapid querying
+seatSchema.index({ eventId: 1, bookingDate: 1, timeSlot: 1 });
+seatSchema.index({ userId: 1 });
+
 module.exports = mongoose.model('Seat', seatSchema);

@@ -212,8 +212,10 @@ app.get('/api/events/:eventId/availability', async (req, res) => {
 
 app.get('/api/seats/:eventId', async (req, res) => {
     const { date, timeSlot } = req.query;
-    const event = await Event.findById(req.params.eventId).select('capacity').lean();
-    const seatsData = await Seat.find({ eventId: req.params.eventId, bookingDate: date, timeSlot }).lean();
+    const [event, seatsData] = await Promise.all([
+        Event.findById(req.params.eventId).select('capacity').lean(),
+        Seat.find({ eventId: req.params.eventId, bookingDate: date, timeSlot }).lean()
+    ]);
     
     const now = new Date();
     const fiveMinutes = 5 * 60 * 1000;
@@ -320,9 +322,11 @@ app.post('/api/events/book-seats', verifyActiveUser, async (req, res) => {
 app.post('/api/events/book-general', verifyActiveUser, async (req, res) => {
     const { eventId, qty, selectedDate, timeSlot } = req.body;
     try {
-        const event = await Event.findById(eventId).select('capacity').lean();
+        const [event, currentSold] = await Promise.all([
+            Event.findById(eventId).select('capacity').lean(),
+            Seat.countDocuments({ eventId, bookingDate: selectedDate, timeSlot })
+        ]);
         if (!event) return res.status(404).json({ success: false, message: "Event not found." });
-        const currentSold = await Seat.countDocuments({ eventId, bookingDate: selectedDate, timeSlot });
         if (currentSold + Number(qty) > event.capacity) return res.status(400).json({ success: false, message: "Not enough tickets." });
 
         const tickets = Array.from({length: Number(qty)}).map((_, i) => ({
