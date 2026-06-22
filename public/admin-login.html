@@ -40,24 +40,20 @@
                         
                         <div class="mb-4">
                             <label class="form-label text-light">Password</label>
-                            <div class="position-relative">
-                                <input type="password" id="admin-password" class="form-control" required>
-                                <button type="button" class="btn btn-link position-absolute end-0 top-50 translate-middle-y text-muted text-decoration-none" onclick="toggleVisibility('admin-password', this)" tabindex="-1">
-                                    <svg class="eye-show" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/></svg>
-                                    <svg class="eye-hide d-none" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path d="M13.359 11.238C15.06 9.72 16 8 16 8s-3-5.5-8-5.5a7.028 7.028 0 0 0-2.79.588l.77.771A5.944 5.944 0 0 1 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.134 13.134 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755-.165.165-.337.328-.517.486z"/><path d="M11.297 9.176a3.5 3.5 0 0 0-4.474-4.474l.823.823a2.5 2.5 0 0 1 2.829 2.829zm-2.943 1.299.822.822a3.5 3.5 0 0 1-4.474-4.474l.823.823a2.5 2.5 0 0 0 2.829 2.829"/><path d="M3.35 5.47c-.18.16-.353.322-.518.487A13.134 13.134 0 0 0 1.172 8l.195.288c.335.48.83 1.12 1.465 1.755C4.121 11.332 5.881 12.5 8 12.5c.716 0 1.39-.133 2.02-.36l.77.772A7.029 7.029 0 0 1 8 13.5C3 13.5 0 8 0 8s.939-1.721 2.641-3.238l.708.709zm10.296 8.884-12-12 .708-.708 12 12-.708.708"/></svg>
+                            <div class="input-group">
+                                <input type="password" id="admin-password" class="form-control border-end-0" required>
+                                <button class="btn border border-start-0" type="button" id="toggle-admin-password" style="background-color: var(--surface-input); color: var(--text-muted); border-color: #2a2b36 !important;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye" viewBox="0 0 16 16">
+                                        <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/>
+                                        <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/>
+                                    </svg>
                                 </button>
                             </div>
                         </div>
 
                         <div class="mb-4 d-none" id="secret-key-container">
                             <label class="form-label text-warning fw-bold">Admin Secret Key (Required)</label>
-                            <div class="position-relative">
-                                <input type="password" id="admin-secret" class="form-control border-warning" placeholder="Enter root secret key">
-                                <button type="button" class="btn btn-link position-absolute end-0 top-50 translate-middle-y text-muted text-decoration-none" onclick="toggleVisibility('admin-secret', this)" tabindex="-1">
-                                    <svg class="eye-show" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/></svg>
-                                    <svg class="eye-hide d-none" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path d="M13.359 11.238C15.06 9.72 16 8 16 8s-3-5.5-8-5.5a7.028 7.028 0 0 0-2.79.588l.77.771A5.944 5.944 0 0 1 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.134 13.134 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755-.165.165-.337.328-.517.486z"/><path d="M11.297 9.176a3.5 3.5 0 0 0-4.474-4.474l.823.823a2.5 2.5 0 0 1 2.829 2.829zm-2.943 1.299.822.822a3.5 3.5 0 0 1-4.474-4.474l.823.823a2.5 2.5 0 0 0 2.829 2.829"/><path d="M3.35 5.47c-.18.16-.353.322-.518.487A13.134 13.134 0 0 0 1.172 8l.195.288c.335.48.83 1.12 1.465 1.755C4.121 11.332 5.881 12.5 8 12.5c.716 0 1.39-.133 2.02-.36l.77.772A7.029 7.029 0 0 1 8 13.5C3 13.5 0 8 0 8s.939-1.721 2.641-3.238l.708.709zm10.296 8.884-12-12 .708-.708 12 12-.708.708"/></svg>
-                                </button>
-                            </div>
+                            <input type="password" id="admin-secret" class="form-control border-warning" placeholder="Enter root secret key">
                         </div>
 
                         <button type="submit" class="btn btn-warning w-100 fw-bold fs-5" id="admin-btn">Login to Dashboard</button>
@@ -73,6 +69,29 @@
 </main>
 
 <script>
+    window.originalAlert = window.alert;
+    window.alert = function(msg) {
+        const existing = document.getElementById('custom-alert-modal');
+        if (existing) existing.remove();
+        const modalHtml = `
+        <div class="modal fade" id="custom-alert-modal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+          <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 shadow-lg" style="background: #1e1e1e; border: 1px solid #333 !important; border-radius: 12px;">
+              <div class="modal-body text-center p-4">
+                <h5 class="text-white mb-3 fw-bold">Notice</h5>
+                <p class="text-muted mb-4" style="white-space: pre-wrap; font-size: 15px;">${msg}</p>
+                <button type="button" class="btn btn-warning w-100 rounded-pill fw-bold py-2" data-bs-dismiss="modal">OK</button>
+              </div>
+            </div>
+          </div>
+        </div>`;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        const modalEl = document.getElementById('custom-alert-modal');
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+        modalEl.addEventListener('hidden.bs.modal', () => { modalEl.remove(); });
+    };
+
     let isLoginMode = true;
     const adminTitle = document.getElementById('admin-title');
     const adminBtn = document.getElementById('admin-btn');
@@ -96,6 +115,18 @@
             toggleModeBtn.innerText = 'Already an admin? Login here.';
             secretKeyContainer.classList.remove('d-none');
             secretInput.required = true;
+        }
+    });
+
+    document.getElementById('toggle-admin-password').addEventListener('click', () => {
+        const passEl = document.getElementById('admin-password');
+        const toggleBtn = document.getElementById('toggle-admin-password');
+        if (passEl.getAttribute('type') === 'password') {
+            passEl.setAttribute('type', 'text');
+            toggleBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye-slash" viewBox="0 0 16 16"><path d="M13.359 11.238C15.06 9.72 16 8 16 8s-3-5.5-8-5.5a7.028 7.028 0 0 0-2.79.588l.77.771A5.944 5.944 0 0 1 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.134 13.134 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755l-.709-.708zm-1.89-1.89-1.4-1.4a2.5 2.5 0 0 0-3.5-3.5l-1.4-1.4a4.5 4.5 0 0 1 6.3 6.3zm1.18-1.18-.5.5A13.133 13.133 0 0 1 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8c.058-.087.122-.183.195-.288l1.41-1.41a7.028 7.028 0 0 0-.588 2.79 6 6 0 0 0 5.19 5.86 1.492 1.492 0 0 0 1.25.14c.2-.07.41-.16.63-.26l1.23 1.23a1.5 1.5 0 0 0 1.95-2.26l-1.41-1.41zm-6.07 1.07-1.4-1.4a2.5 2.5 0 0 0 3.5 3.5l-1.4-1.4a1.5 1.5 0 0 1-.7-.7z"/></svg>`;
+        } else {
+            passEl.setAttribute('type', 'password');
+            toggleBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye" viewBox="0 0 16 16"><path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/></svg>`;
         }
     });
 
@@ -145,54 +176,6 @@
             }
         }
     });
-</script>
-<!-- Toast Notification Container -->
-<div id="toast-container" class="position-fixed top-0 end-0 p-3" style="z-index: 11000; margin-top: 10px;"></div>
-<script>
-function toggleVisibility(id, btn) {
-    const input = document.getElementById(id);
-    const eyeShow = btn.querySelector('.eye-show');
-    const eyeHide = btn.querySelector('.eye-hide');
-    if (input.type === 'password') {
-        input.type = 'text';
-        eyeShow.classList.add('d-none');
-        eyeHide.classList.remove('d-none');
-    } else {
-        input.type = 'password';
-        eyeHide.classList.add('d-none');
-        eyeShow.classList.remove('d-none');
-    }
-}
-
-function showToast(message, type = 'info') {
-    const container = document.getElementById('toast-container');
-    if (!container) return;
-    
-    let title = 'Notification';
-    if(message.includes('✅') || type === 'success') { type = 'success'; title = 'Success'; message = message.replace('✅', '').trim(); }
-    else if(message.includes('❌') || message.includes('🛑') || message.includes('⚠️') || type === 'error') { type = 'error'; title = 'Error'; message = message.replace(/[❌🛑⚠️]/g, '').trim(); }
-    
-    const toastHtml = `
-        <div class="toast border-0 show" style="background-color: #18181b !important; color: #ffffff !important; border: 1px solid rgba(255,255,255,0.1) !important; min-width: 280px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4000">
-            <div class="toast-header border-0" style="background-color: #27272a !important; color: #ffffff !important; border-bottom: 1px solid rgba(255,255,255,0.1) !important;">
-                <span class="toast-indicator ${type}"></span>
-                <strong class="me-auto" style="color: #ffffff !important;">${title}</strong>
-                <button type="button" class="btn-close" style="filter: invert(1) grayscale(100%) brightness(200%);" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-            <div class="toast-body" style="color: #ffffff !important;">${message}</div>
-        </div>
-    `;
-    
-    const toastWrapper = document.createElement('div');
-    toastWrapper.innerHTML = toastHtml;
-    const toastEl = toastWrapper.firstElementChild;
-    container.appendChild(toastEl);
-    
-    const bsToast = new bootstrap.Toast(toastEl);
-    bsToast.show();
-    
-    toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
-}
 </script>
 </body>
 </html>

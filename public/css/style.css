@@ -645,29 +645,3 @@ button[data-bs-toggle="collapse"] svg {
 button[data-bs-toggle="collapse"][aria-expanded="true"] svg {
     transform: rotate(180deg);
 }
-
-/* ========================================== */
-/* 🍞 CUSTOM TOAST NOTIFICATIONS */
-/* ========================================== */
-.custom-toast {
-    background-color: #18181b !important; /* Zinc 900 */
-    color: #ffffff !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    backdrop-filter: blur(10px) !important;
-    border-radius: 8px !important;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
-    min-width: 280px;
-}
-.custom-toast .toast-header {
-    background-color: #27272a !important; /* Zinc 800 */
-    color: #ffffff !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-}
-.custom-toast .btn-close {
-    filter: invert(1) grayscale(100%) brightness(200%) !important;
-}
-.toast-indicator { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; }
-.toast-indicator.success { background: var(--success); box-shadow: 0 0 8px var(--success); }
-.toast-indicator.error { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
-.toast-indicator.info { background: var(--primary); box-shadow: 0 0 8px var(--primary); }
-.toast-indicator.warning { background: var(--warning); box-shadow: 0 0 8px var(--warning); }

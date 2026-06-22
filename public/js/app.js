@@ -6,6 +6,32 @@ const safeBind = (id, event, callback) => {
     if (el) el.addEventListener(event, callback);
 };
 
+// ==========================================
+// ✨ BEAUTIFUL CUSTOM ALERT
+// ==========================================
+window.originalAlert = window.alert;
+window.alert = function(msg) {
+    const existing = document.getElementById('custom-alert-modal');
+    if (existing) existing.remove();
+    const modalHtml = `
+    <div class="modal fade" id="custom-alert-modal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+      <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg" style="background: #1e1e1e; border: 1px solid #333 !important; border-radius: 12px;">
+          <div class="modal-body text-center p-4">
+            <h5 class="text-white mb-3 fw-bold">Notice</h5>
+            <p class="text-muted mb-4" style="white-space: pre-wrap; font-size: 15px;">${msg}</p>
+            <button type="button" class="btn btn-danger w-100 rounded-pill fw-bold py-2" data-bs-dismiss="modal">OK</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    const modalEl = document.getElementById('custom-alert-modal');
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
+    modalEl.addEventListener('hidden.bs.modal', () => { modalEl.remove(); });
+};
+
 // Global State
 let isLoginMode = true;
 let currentEventId = null;
@@ -19,58 +45,6 @@ let pendingPaymentData = null;
 let paymentModalInstance = null;
 let finalCheckoutTotal = 0;
 let cancelModalInstance = null; 
-
-// ==========================================
-// 🍞 TOAST NOTIFICATION UTILITY
-// ==========================================
-function showToast(message, type = 'info') {
-    const container = document.getElementById('toast-container');
-    if (!container) return;
-    
-    let title = 'Notification';
-    if(message.includes('✅') || type === 'success') { type = 'success'; title = 'Success'; message = message.replace('✅', '').trim(); }
-    else if(message.includes('❌') || message.includes('🛑') || message.includes('⚠️') || type === 'error') { type = 'error'; title = 'Error'; message = message.replace(/[❌🛑⚠️]/g, '').trim(); }
-    
-    const toastHtml = `
-        <div class="toast border-0 show" style="background-color: #18181b !important; color: #ffffff !important; border: 1px solid rgba(255,255,255,0.1) !important; min-width: 280px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4000">
-            <div class="toast-header border-0" style="background-color: #27272a !important; color: #ffffff !important; border-bottom: 1px solid rgba(255,255,255,0.1) !important;">
-                <span class="toast-indicator ${type}"></span>
-                <strong class="me-auto" style="color: #ffffff !important;">${title}</strong>
-                <button type="button" class="btn-close" style="filter: invert(1) grayscale(100%) brightness(200%);" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-            <div class="toast-body" style="color: #ffffff !important;">${message}</div>
-        </div>
-    `;
-    
-    const toastWrapper = document.createElement('div');
-    toastWrapper.innerHTML = toastHtml;
-    const toastEl = toastWrapper.firstElementChild;
-    container.appendChild(toastEl);
-    
-    const bsToast = new bootstrap.Toast(toastEl);
-    bsToast.show();
-    
-    toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
-}
-
-// ==========================================
-// 👁️ PASSWORD VISIBILITY TOGGLE
-// ==========================================
-safeBind('toggle-password', 'click', (e) => {
-    const btn = e.currentTarget;
-    const input = document.getElementById('password');
-    const eyeShow = document.getElementById('eye-icon-show');
-    const eyeHide = document.getElementById('eye-icon-hide');
-    if (input.type === 'password') {
-        input.type = 'text';
-        eyeShow.classList.add('d-none');
-        eyeHide.classList.remove('d-none');
-    } else {
-        input.type = 'password';
-        eyeHide.classList.add('d-none');
-        eyeShow.classList.remove('d-none');
-    }
-});
 
 let currentLocationFilter = localStorage.getItem('userCity') || 'All Cities';
 
@@ -129,7 +103,7 @@ if (socket) {
 
 function handlePossibleForceLogout(data) {
     if (data.forceLogout) {
-        showToast("🚨 Session Terminated: " + data.message);
+        alert("🚨 Session Terminated: " + data.message);
         document.getElementById('logout-btn')?.click();
         return true;
     }
@@ -147,7 +121,7 @@ function checkEventExpirations() {
         if (isExpired && cardRendered) {
             needsRefresh = true; 
             if (currentEventId === String(e._id)) {
-                showToast("⏳ Time's up! This event has officially ended.");
+                alert("⏳ Time's up! This event has officially ended.");
                 switchView('booking-section');
             }
         }
@@ -211,6 +185,18 @@ const setupAuthMode = (isLogin) => {
 safeBind('nav-signin-btn', 'click', (e) => { e.preventDefault(); setupAuthMode(true); });
 safeBind('nav-signup-btn', 'click', (e) => { e.preventDefault(); setupAuthMode(false); });
 
+safeBind('toggle-password', 'click', () => {
+    const passEl = document.getElementById('password');
+    const toggleBtn = document.getElementById('toggle-password');
+    if (passEl.getAttribute('type') === 'password') {
+        passEl.setAttribute('type', 'text');
+        toggleBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye-slash" viewBox="0 0 16 16"><path d="M13.359 11.238C15.06 9.72 16 8 16 8s-3-5.5-8-5.5a7.028 7.028 0 0 0-2.79.588l.77.771A5.944 5.944 0 0 1 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.134 13.134 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755l-.709-.708zm-1.89-1.89-1.4-1.4a2.5 2.5 0 0 0-3.5-3.5l-1.4-1.4a4.5 4.5 0 0 1 6.3 6.3zm1.18-1.18-.5.5A13.133 13.133 0 0 1 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8c.058-.087.122-.183.195-.288l1.41-1.41a7.028 7.028 0 0 0-.588 2.79 6 6 0 0 0 5.19 5.86 1.492 1.492 0 0 0 1.25.14c.2-.07.41-.16.63-.26l1.23 1.23a1.5 1.5 0 0 0 1.95-2.26l-1.41-1.41zm-6.07 1.07-1.4-1.4a2.5 2.5 0 0 0 3.5 3.5l-1.4-1.4a1.5 1.5 0 0 1-.7-.7z"/></svg>`;
+    } else {
+        passEl.setAttribute('type', 'password');
+        toggleBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye" viewBox="0 0 16 16"><path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/></svg>`;
+    }
+});
+
 safeBind('auth-form', 'submit', async (e) => {
     e.preventDefault();
     const endpoint = isLoginMode ? '/api/login' : '/api/signup';
@@ -228,15 +214,15 @@ safeBind('auth-form', 'submit', async (e) => {
         if (data.success) {
             if (isLoginMode) showBookingScreen(data.username, data.isAdmin);
             else {
-                showToast(data.message); 
+                alert(data.message); 
                 setupAuthMode(true);
                 passEl.value = '';
             }
         } else {
             if (data.notFound && isLoginMode) { if (confirm(data.message)) setupAuthMode(false); } 
-            else showToast(data.message || 'Error occurred');
+            else alert(data.message || 'Error occurred');
         }
-    } catch (err) { showToast("Server error. Please try again."); }
+    } catch (err) { alert("Server error. Please try again."); }
 });
 
 function showBookingScreen(username, isAdmin = false) {
@@ -727,11 +713,11 @@ async function triggerStandardEventSelection(eventData) {
         const data = await res.json();
         if (handlePossibleForceLogout(data)) return; 
         if (!data.user.dob) {
-            showToast(`⚠️ Age Verification Required.\nYou must update your Profile with your Date of Birth before booking this event.`);
+            alert(`⚠️ Age Verification Required.\nYou must update your Profile with your Date of Birth before booking this event.`);
             document.getElementById('profile-link-btn')?.click(); return;
         }
         const userAge = Math.abs(new Date(Date.now() - new Date(data.user.dob).getTime()).getUTCFullYear() - 1970);
-        if (userAge < requiredAge) { showToast(`🛑 Access Denied!\nThis event requires age ${requiredAge}+.`); return; }
+        if (userAge < requiredAge) { alert(`🛑 Access Denied!\nThis event requires age ${requiredAge}+.`); return; }
     }
 
     currentEventId = eventData._id;
@@ -1017,7 +1003,7 @@ safeBind('seat-map', 'click', async (e) => {
                     // Revert on failure
                     btn.classList.remove('selected');
                     updateOrderSummary();
-                    showToast(data.message);
+                    alert(data.message);
                     await loadEventDataForDateAndTime(currentSelectedDate, currentSelectedTime, true);
                 }
             } catch (err) { 
@@ -1071,7 +1057,7 @@ safeBind('sidebar-checkout-btn', 'click', () => {
             .filter(id => id != null && id !== 'null' && id !== '');
             
         if (selectedSeats.length === 0) {
-            showToast("Please select at least one valid seat before checking out.");
+            alert("Please select at least one valid seat before checking out.");
             return;
         }    
             
@@ -1114,13 +1100,13 @@ safeBind('confirm-payment-btn', 'click', async (e) => {
                 if(paymentModalInstance) paymentModalInstance.hide();
                 if(pendingPaymentData.type === 'seated') { await renderSeatsForEvent(pendingPaymentData.eventId, pendingPaymentData.selectedDate, pendingPaymentData.timeSlot); } 
                 else { const q = document.getElementById('general-qty'); if(q) q.value = 1; await loadEventDataForDateAndTime(pendingPaymentData.selectedDate, pendingPaymentData.timeSlot, true); }
-                setTimeout(() => showToast("✅ Payment Successful!\n\n" + data.message), 400);
+                setTimeout(() => alert("✅ Payment Successful!\n\n" + data.message), 400);
             } else {
                 if(paymentModalInstance) paymentModalInstance.hide();
                 await loadEventDataForDateAndTime(pendingPaymentData.selectedDate, pendingPaymentData.timeSlot, true); 
-                setTimeout(() => showToast("❌ Booking Failed: " + data.message), 400);
+                setTimeout(() => alert("❌ Booking Failed: " + data.message), 400);
             }
-        } catch (err) { if(paymentModalInstance) paymentModalInstance.hide(); showToast("Network error during payment processing.");
+        } catch (err) { if(paymentModalInstance) paymentModalInstance.hide(); alert("Network error during payment processing.");
         } finally { btn.innerText = originalText; btn.disabled = false; btn.dataset.processing = "false"; pendingPaymentData = null; }
     }, 0); 
 });
@@ -1326,7 +1312,7 @@ safeBind('confirm-partial-cancel-btn', 'click', async (e) => {
     const selectedPills = document.querySelectorAll('.cancel-seat-pill.selected');
     
     if (selectedPills.length === 0) {
-        showToast("Please select at least one seat to cancel.");
+        alert("Please select at least one seat to cancel.");
         return;
     }
 
@@ -1348,7 +1334,7 @@ safeBind('confirm-partial-cancel-btn', 'click', async (e) => {
         cancelModalInstance.hide();
         document.getElementById('nav-bookings-link')?.click(); 
     } catch (err) { 
-        showToast('Cancellation failed due to a network error.'); 
+        alert('Cancellation failed due to a network error.'); 
     } finally {
         btn.disabled = false;
         btn.innerText = originalText;
@@ -1458,7 +1444,7 @@ function showTicketDetail(ticketData) {
 
     safeBind('download-pdf-btn', 'click', () => {
         if (!window.jspdf) {
-            showToast("PDF engine is still loading. Please wait a second and try again.");
+            alert("PDF engine is still loading. Please wait a second and try again.");
             return;
         }
 
@@ -1584,7 +1570,7 @@ function showTicketDetail(ticketData) {
             btn.disabled = false;
         } catch (err) {
             console.error("PDF Generation Error:", err);
-            showToast("Error generating PDF ticket.");
+            alert("Error generating PDF ticket.");
             btn.innerHTML = originalText;
             btn.disabled = false;
         }

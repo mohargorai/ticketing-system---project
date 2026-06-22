@@ -11,12 +11,38 @@ let revenueChartInstance = null;
 Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
 Chart.defaults.color = '#a1a1aa';
 
+// ==========================================
+// ✨ BEAUTIFUL CUSTOM ALERT
+// ==========================================
+window.originalAlert = window.alert;
+window.alert = function(msg) {
+    const existing = document.getElementById('custom-alert-modal');
+    if (existing) existing.remove();
+    const modalHtml = `
+    <div class="modal fade" id="custom-alert-modal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+      <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg" style="background: #1e1e1e; border: 1px solid #333 !important; border-radius: 12px;">
+          <div class="modal-body text-center p-4">
+            <h5 class="text-white mb-3 fw-bold">Notice</h5>
+            <p class="text-muted mb-4" style="white-space: pre-wrap; font-size: 15px;">${msg}</p>
+            <button type="button" class="btn btn-warning w-100 rounded-pill fw-bold py-2" data-bs-dismiss="modal">OK</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    const modalEl = document.getElementById('custom-alert-modal');
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
+    modalEl.addEventListener('hidden.bs.modal', () => { modalEl.remove(); });
+};
+
 window.addEventListener('DOMContentLoaded', async () => {
     const res = await fetch(`/api/check-session?t=${Date.now()}`);
     const data = await res.json();
     
     if (!data.loggedIn || !data.isAdmin) {
-        showToast("Access Denied. Please log in as an Admin.");
+        alert("Access Denied. Please log in as an Admin.");
         window.location.href = 'admin-login.html';
         return;
     }
@@ -40,7 +66,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('confirmRoleBtn')?.addEventListener('click', async () => {
         const secretKey = document.getElementById('adminSecretKeyInput').value;
-        if (!secretKey) return showToast("Please enter the Admin Secret Key.");
+        if (!secretKey) return alert("Please enter the Admin Secret Key.");
 
         try {
             const res = await fetch(`/api/admin/users/${currentRoleToggleUserId}/role`, {
@@ -53,11 +79,11 @@ window.addEventListener('DOMContentLoaded', async () => {
                 bootstrap.Modal.getInstance(document.getElementById('roleToggleModal')).hide();
                 // dashboardUpdate socket will trigger reloadUsers
             } else {
-                showToast(data.message || "Failed to toggle role.");
+                alert(data.message || "Failed to toggle role.");
             }
         } catch (err) {
             console.error("Error toggling role:", err);
-            showToast("An error occurred.");
+            alert("An error occurred.");
         }
     });
 
@@ -217,44 +243,6 @@ function animateCountUp(element, start, end, duration, isCurrency = false) {
     }
     
     observer.observe(element);
-}
-
-const safeBind = (id, event, callback) => {
-    const el = document.getElementById(id);
-    if (el) el.addEventListener(event, callback);
-};
-
-// ==========================================
-// 🍞 TOAST NOTIFICATION UTILITY
-// ==========================================
-function showToast(message, type = 'info') {
-    const container = document.getElementById('toast-container');
-    if (!container) { showToast(message); return; } // Fallback if no container
-    
-    let title = 'Notification';
-    if(message.includes('✅') || type === 'success') { type = 'success'; title = 'Success'; message = message.replace('✅', '').trim(); }
-    else if(message.includes('❌') || message.includes('🛑') || message.includes('⚠️') || type === 'error') { type = 'error'; title = 'Error'; message = message.replace(/[❌🛑⚠️]/g, '').trim(); }
-    
-    const toastHtml = `
-        <div class="toast border-0 show" style="background-color: #18181b !important; color: #ffffff !important; border: 1px solid rgba(255,255,255,0.1) !important; min-width: 280px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4000">
-            <div class="toast-header border-0" style="background-color: #27272a !important; color: #ffffff !important; border-bottom: 1px solid rgba(255,255,255,0.1) !important;">
-                <span class="toast-indicator ${type}"></span>
-                <strong class="me-auto" style="color: #ffffff !important;">${title}</strong>
-                <button type="button" class="btn-close" style="filter: invert(1) grayscale(100%) brightness(200%);" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-            <div class="toast-body" style="color: #ffffff !important;">${message}</div>
-        </div>
-    `;
-    
-    const toastWrapper = document.createElement('div');
-    toastWrapper.innerHTML = toastHtml;
-    const toastEl = toastWrapper.firstElementChild;
-    container.appendChild(toastEl);
-    
-    const bsToast = new bootstrap.Toast(toastEl);
-    bsToast.show();
-    
-    toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
 }
 
 // 🚨 PREMIUM CHART UI OVERHAUL
@@ -548,14 +536,14 @@ eventForm.addEventListener('submit', async (e) => {
         });
         const data = await res.json();
 
-        showToast(data.message);
+        alert(data.message);
         if (data.success) {
             resetEventForm();
             loadEvents(); 
             loadAnalytics(); 
         }
     } catch (err) {
-        showToast("An error occurred while saving the event.");
+        alert("An error occurred while saving the event.");
     }
 });
 
@@ -569,10 +557,10 @@ window.deleteEvent = async function(id) {
             loadEvents(); 
             loadAnalytics(); 
         } else {
-            showToast(data.message);
+            alert(data.message);
         }
     } catch (err) {
-        showToast("Failed to delete event.");
+        alert("Failed to delete event.");
     }
 }
 
@@ -635,10 +623,10 @@ window.deleteUser = async function(id) {
             loadUsers();
             loadAnalytics(); 
         } else {
-            showToast(data.message);
+            alert(data.message);
         }
     } catch (err) {
-        showToast("Failed to delete user.");
+        alert("Failed to delete user.");
     }
 }
 
