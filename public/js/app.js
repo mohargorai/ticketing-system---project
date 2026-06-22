@@ -154,6 +154,15 @@ const switchView = (viewId) => {
     if (navbarCollapse && navbarCollapse.classList.contains('show')) {
         document.querySelector('.navbar-toggler')?.click();
     }
+
+    const badge = document.getElementById('developer-portfolio-badge');
+    if (badge) {
+        if (viewId === 'auth-section') {
+            badge.style.display = 'flex';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
 };
 
 safeBind('home-logo', 'click', (e) => { e.preventDefault(); switchView('booking-section'); updateMobileNav('btn-nav-home'); });
