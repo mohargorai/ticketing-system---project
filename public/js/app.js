@@ -1074,6 +1074,32 @@ safeBind('seat-map', 'click', async (e) => {
     }
 });
 
+safeBind('unselect-all-btn', 'click', async (e) => {
+    e.preventDefault();
+    const selectedBtns = Array.from(document.querySelectorAll('#seat-map .bms-seat.selected'));
+    if (selectedBtns.length === 0) return;
+
+    // Optimistic UI clear
+    selectedBtns.forEach(btn => btn.classList.remove('selected'));
+    updateOrderSummary();
+
+    // Call unlock API for each seat
+    const unlockPromises = selectedBtns.map(btn => {
+        const seatId = btn.getAttribute('data-id');
+        return fetch('/api/seats/unlock', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ eventId: currentEventId, seatId, date: currentSelectedDate, timeSlot: currentSelectedTime })
+        });
+    });
+
+    try {
+        await Promise.all(unlockPromises);
+    } catch (err) {
+        console.error("Error clearing seats:", err);
+    }
+});
+
 safeBind('general-qty', 'input', (e) => {
     if (e.target.value === '') { updateOrderSummary(true); return; }
     let qty = parseInt(e.target.value) || 0; const max = parseInt(e.target.max) || 0;
