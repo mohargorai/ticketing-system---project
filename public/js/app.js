@@ -18,8 +18,7 @@ window.alert = function(msg) {
       <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content border-0 shadow-lg" style="background: #1e1e1e; border: 1px solid #333 !important; border-radius: 12px;">
           <div class="modal-body text-center p-4">
-            <h5 class="text-white mb-3 fw-bold">Notice</h5>
-            <p class="text-muted mb-4" style="white-space: pre-wrap; font-size: 15px;">${msg}</p>
+            <p class="text-white mb-4 mt-2" style="white-space: pre-wrap; font-size: 16px; font-weight: 500;">${msg}</p>
             <button type="button" class="btn btn-danger w-100 rounded-pill fw-bold py-2" data-bs-dismiss="modal">OK</button>
           </div>
         </div>
