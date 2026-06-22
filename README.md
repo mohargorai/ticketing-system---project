@@ -37,6 +37,8 @@ Whether managing a massive stadium concert or a local cinema chain, VibePass ens
 - 💺 **Symmetrical Seat Matrix Engine** – A mathematically precise flexbox engine that detects short rows and perfectly centers them with invisible placeholders for a flawless auditorium layout.
 - 📱 **Premium Glassmorphism & Responsive Design** – Features a dynamic glassmorphic bottom navigation dock, sleek translucent cards, and a fully adaptive seat matrix ensuring a flawless experience on mobile devices.
 - 🎟️ **Dynamic Passes & PDFs** – Client-side QR generation (`qrcodejs`) and customized perforated stub PDFs (`jsPDF`) offset heavy backend document rendering.
+- 🔢 **Animated Checkout Pricing** – The Order Summary features a custom JavaScript easing function that smoothly counts up/down dynamically as users add or remove seats, mimicking premium Native App experiences.
+- 🧹 **Optimistic Seat Clearing** – A prominent "Clear All" action immediately purges the local UI selection state while silently firing off a robust array of parallel backend requests to instantly release the server-side locks.
 
 ---
 
