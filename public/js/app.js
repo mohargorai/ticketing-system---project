@@ -32,13 +32,13 @@ function showToast(message, type = 'info') {
     else if(message.includes('❌') || message.includes('🛑') || message.includes('⚠️') || type === 'error') { type = 'error'; title = 'Error'; message = message.replace(/[❌🛑⚠️]/g, '').trim(); }
     
     const toastHtml = `
-        <div class="toast custom-toast border-0 show" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4000">
-            <div class="toast-header border-0">
+        <div class="toast border-0 show" style="background-color: #18181b !important; color: #ffffff !important; border: 1px solid rgba(255,255,255,0.1) !important; min-width: 280px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4000">
+            <div class="toast-header border-0" style="background-color: #27272a !important; color: #ffffff !important; border-bottom: 1px solid rgba(255,255,255,0.1) !important;">
                 <span class="toast-indicator ${type}"></span>
-                <strong class="me-auto">${title}</strong>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                <strong class="me-auto" style="color: #ffffff !important;">${title}</strong>
+                <button type="button" class="btn-close" style="filter: invert(1) grayscale(100%) brightness(200%);" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
-            <div class="toast-body">${message}</div>
+            <div class="toast-body" style="color: #ffffff !important;">${message}</div>
         </div>
     `;
     
