@@ -645,3 +645,78 @@ button[data-bs-toggle="collapse"] svg {
 button[data-bs-toggle="collapse"][aria-expanded="true"] svg {
     transform: rotate(180deg);
 }
+
+/* DEVELOPER BADGE */
+.developed-by-badge {
+    position: fixed;
+    bottom: 24px;
+    left: 24px;
+    background-color: rgba(20, 20, 23, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50px;
+    padding: 6px 18px 6px 6px;
+    z-index: 1050;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+}
+
+.developed-by-badge:hover {
+    transform: translateY(-3px);
+    border-color: rgba(255, 255, 255, 0.2);
+    background-color: rgba(30, 30, 35, 0.95);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+}
+
+.developed-by-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.developer-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid #2a2b36;
+    object-fit: cover;
+    background-color: #000;
+}
+
+.developer-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.developer-label {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    color: #888;
+    line-height: 1;
+    margin-bottom: 3px;
+    text-transform: uppercase;
+}
+
+.developer-name {
+    font-size: 15px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1;
+}
+
+@media (max-width: 768px) {
+    .developed-by-badge {
+        bottom: 85px; /* Above the mobile nav bar */
+        left: 15px;
+        transform: scale(0.9);
+        transform-origin: bottom left;
+    }
+    .developed-by-badge:hover {
+        transform: scale(0.9) translateY(-3px);
+    }
+}
