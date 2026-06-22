@@ -49,7 +49,7 @@ Whether managing a massive stadium concert or a local cinema chain, VibePass ens
 | **Database** | MongoDB Atlas (Mongoose ODM with `.lean()` optimization) |
 | **Caching** | Redis (In-Memory Data Store) |
 | **Real-Time**| Socket.io (WebSockets) |
-| **Security** | `bcryptjs` (Hashing), `express-session` (MongoStore), `dotenv` |
+| **Security** | `bcryptjs` (Hashing), `express-session` (MongoStore), `dotenv`, `express-mongo-sanitize` (NoSQL Injection Prevention) |
 
 ---
 
@@ -116,6 +116,7 @@ ticketing-system/
 │   ├── css/            # Design System (style.css)
 │   ├── js/             # Client-side Logic (app.js, admin.js)
 │   ├── index.html      # Main SPA Interface
+│   ├── admin-login.html# Admin Authentication Portal
 │   └── admin.html      # Secure CMS Dashboard
 ├── .env                # Environment Configurations
 ├── server.js           # Express API & WebSocket Initialization
