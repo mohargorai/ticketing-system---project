@@ -20,6 +20,58 @@ let paymentModalInstance = null;
 let finalCheckoutTotal = 0;
 let cancelModalInstance = null; 
 
+// ==========================================
+// 🍞 TOAST NOTIFICATION UTILITY
+// ==========================================
+function showToast(message, type = 'info') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    
+    let title = 'Notification';
+    if(message.includes('✅') || type === 'success') { type = 'success'; title = 'Success'; message = message.replace('✅', '').trim(); }
+    else if(message.includes('❌') || message.includes('🛑') || message.includes('⚠️') || type === 'error') { type = 'error'; title = 'Error'; message = message.replace(/[❌🛑⚠️]/g, '').trim(); }
+    
+    const toastHtml = `
+        <div class="toast custom-toast border-0 show" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4000">
+            <div class="toast-header border-0">
+                <span class="toast-indicator ${type}"></span>
+                <strong class="me-auto">${title}</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">${message}</div>
+        </div>
+    `;
+    
+    const toastWrapper = document.createElement('div');
+    toastWrapper.innerHTML = toastHtml;
+    const toastEl = toastWrapper.firstElementChild;
+    container.appendChild(toastEl);
+    
+    const bsToast = new bootstrap.Toast(toastEl);
+    bsToast.show();
+    
+    toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
+}
+
+// ==========================================
+// 👁️ PASSWORD VISIBILITY TOGGLE
+// ==========================================
+safeBind('toggle-password', 'click', (e) => {
+    const btn = e.currentTarget;
+    const input = document.getElementById('password');
+    const eyeShow = document.getElementById('eye-icon-show');
+    const eyeHide = document.getElementById('eye-icon-hide');
+    if (input.type === 'password') {
+        input.type = 'text';
+        eyeShow.classList.add('d-none');
+        eyeHide.classList.remove('d-none');
+    } else {
+        input.type = 'password';
+        eyeHide.classList.add('d-none');
+        eyeShow.classList.remove('d-none');
+    }
+});
+
 let currentLocationFilter = localStorage.getItem('userCity') || 'All Cities';
 
 let initialEventsPromise = fetch(`/api/events?t=${new Date().getTime()}`)
@@ -77,7 +129,7 @@ if (socket) {
 
 function handlePossibleForceLogout(data) {
     if (data.forceLogout) {
-        alert("🚨 Session Terminated: " + data.message);
+        showToast("🚨 Session Terminated: " + data.message);
         document.getElementById('logout-btn')?.click();
         return true;
     }
@@ -95,7 +147,7 @@ function checkEventExpirations() {
         if (isExpired && cardRendered) {
             needsRefresh = true; 
             if (currentEventId === String(e._id)) {
-                alert("⏳ Time's up! This event has officially ended.");
+                showToast("⏳ Time's up! This event has officially ended.");
                 switchView('booking-section');
             }
         }
@@ -176,15 +228,15 @@ safeBind('auth-form', 'submit', async (e) => {
         if (data.success) {
             if (isLoginMode) showBookingScreen(data.username, data.isAdmin);
             else {
-                alert(data.message); 
+                showToast(data.message); 
                 setupAuthMode(true);
                 passEl.value = '';
             }
         } else {
             if (data.notFound && isLoginMode) { if (confirm(data.message)) setupAuthMode(false); } 
-            else alert(data.message || 'Error occurred');
+            else showToast(data.message || 'Error occurred');
         }
-    } catch (err) { alert("Server error. Please try again."); }
+    } catch (err) { showToast("Server error. Please try again."); }
 });
 
 function showBookingScreen(username, isAdmin = false) {
@@ -675,11 +727,11 @@ async function triggerStandardEventSelection(eventData) {
         const data = await res.json();
         if (handlePossibleForceLogout(data)) return; 
         if (!data.user.dob) {
-            alert(`⚠️ Age Verification Required.\nYou must update your Profile with your Date of Birth before booking this event.`);
+            showToast(`⚠️ Age Verification Required.\nYou must update your Profile with your Date of Birth before booking this event.`);
             document.getElementById('profile-link-btn')?.click(); return;
         }
         const userAge = Math.abs(new Date(Date.now() - new Date(data.user.dob).getTime()).getUTCFullYear() - 1970);
-        if (userAge < requiredAge) { alert(`🛑 Access Denied!\nThis event requires age ${requiredAge}+.`); return; }
+        if (userAge < requiredAge) { showToast(`🛑 Access Denied!\nThis event requires age ${requiredAge}+.`); return; }
     }
 
     currentEventId = eventData._id;
@@ -965,7 +1017,7 @@ safeBind('seat-map', 'click', async (e) => {
                     // Revert on failure
                     btn.classList.remove('selected');
                     updateOrderSummary();
-                    alert(data.message);
+                    showToast(data.message);
                     await loadEventDataForDateAndTime(currentSelectedDate, currentSelectedTime, true);
                 }
             } catch (err) { 
@@ -1019,7 +1071,7 @@ safeBind('sidebar-checkout-btn', 'click', () => {
             .filter(id => id != null && id !== 'null' && id !== '');
             
         if (selectedSeats.length === 0) {
-            alert("Please select at least one valid seat before checking out.");
+            showToast("Please select at least one valid seat before checking out.");
             return;
         }    
             
@@ -1062,13 +1114,13 @@ safeBind('confirm-payment-btn', 'click', async (e) => {
                 if(paymentModalInstance) paymentModalInstance.hide();
                 if(pendingPaymentData.type === 'seated') { await renderSeatsForEvent(pendingPaymentData.eventId, pendingPaymentData.selectedDate, pendingPaymentData.timeSlot); } 
                 else { const q = document.getElementById('general-qty'); if(q) q.value = 1; await loadEventDataForDateAndTime(pendingPaymentData.selectedDate, pendingPaymentData.timeSlot, true); }
-                setTimeout(() => alert("✅ Payment Successful!\n\n" + data.message), 400);
+                setTimeout(() => showToast("✅ Payment Successful!\n\n" + data.message), 400);
             } else {
                 if(paymentModalInstance) paymentModalInstance.hide();
                 await loadEventDataForDateAndTime(pendingPaymentData.selectedDate, pendingPaymentData.timeSlot, true); 
-                setTimeout(() => alert("❌ Booking Failed: " + data.message), 400);
+                setTimeout(() => showToast("❌ Booking Failed: " + data.message), 400);
             }
-        } catch (err) { if(paymentModalInstance) paymentModalInstance.hide(); alert("Network error during payment processing.");
+        } catch (err) { if(paymentModalInstance) paymentModalInstance.hide(); showToast("Network error during payment processing.");
         } finally { btn.innerText = originalText; btn.disabled = false; btn.dataset.processing = "false"; pendingPaymentData = null; }
     }, 0); 
 });
@@ -1274,7 +1326,7 @@ safeBind('confirm-partial-cancel-btn', 'click', async (e) => {
     const selectedPills = document.querySelectorAll('.cancel-seat-pill.selected');
     
     if (selectedPills.length === 0) {
-        alert("Please select at least one seat to cancel.");
+        showToast("Please select at least one seat to cancel.");
         return;
     }
 
@@ -1296,7 +1348,7 @@ safeBind('confirm-partial-cancel-btn', 'click', async (e) => {
         cancelModalInstance.hide();
         document.getElementById('nav-bookings-link')?.click(); 
     } catch (err) { 
-        alert('Cancellation failed due to a network error.'); 
+        showToast('Cancellation failed due to a network error.'); 
     } finally {
         btn.disabled = false;
         btn.innerText = originalText;
@@ -1406,7 +1458,7 @@ function showTicketDetail(ticketData) {
 
     safeBind('download-pdf-btn', 'click', () => {
         if (!window.jspdf) {
-            alert("PDF engine is still loading. Please wait a second and try again.");
+            showToast("PDF engine is still loading. Please wait a second and try again.");
             return;
         }
 
@@ -1532,7 +1584,7 @@ function showTicketDetail(ticketData) {
             btn.disabled = false;
         } catch (err) {
             console.error("PDF Generation Error:", err);
-            alert("Error generating PDF ticket.");
+            showToast("Error generating PDF ticket.");
             btn.innerHTML = originalText;
             btn.disabled = false;
         }
