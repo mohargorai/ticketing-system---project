@@ -650,19 +650,16 @@ button[data-bs-toggle="collapse"][aria-expanded="true"] svg {
 /* 🍞 CUSTOM TOAST NOTIFICATIONS */
 /* ========================================== */
 .custom-toast {
-    background: var(--surface-card);
-    border: 1px solid var(--border-color);
+    --bs-toast-bg: var(--surface-card);
+    --bs-toast-header-bg: rgba(255, 255, 255, 0.05);
+    --bs-toast-color: #ffffff;
+    --bs-toast-header-color: #ffffff;
+    --bs-toast-border-color: var(--border-color);
+    --bs-toast-header-border-color: var(--border-color);
+    --bs-toast-box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     backdrop-filter: var(--glass-blur);
     border-radius: var(--radius-md);
-    color: var(--text-main);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     min-width: 280px;
-}
-.custom-toast .toast-header {
-    background: rgba(255, 255, 255, 0.05);
-    border-bottom: 1px solid var(--border-color);
-    color: var(--text-main);
-    font-weight: 600;
 }
 .toast-indicator { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; }
 .toast-indicator.success { background: var(--success); box-shadow: 0 0 8px var(--success); }
