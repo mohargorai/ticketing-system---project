@@ -189,11 +189,10 @@ app.get('/api/events/:eventId/timeslots-availability', async (req, res) => {
     const event = await Event.findById(req.params.eventId).select('capacity timeSlots').lean();
     if (!event) return res.status(404).json({error: "Event not found"});
 
-    const slotsData = [];
-    for (let slot of event.timeSlots) {
+    const slotsData = await Promise.all(event.timeSlots.map(async (slot) => {
         const soldForSlot = await Seat.countDocuments({ eventId: req.params.eventId, bookingDate: date, timeSlot: slot });
-        slotsData.push({ time: slot, capacity: event.capacity, sold: soldForSlot, available: event.capacity - soldForSlot });
-    }
+        return { time: slot, capacity: event.capacity, sold: soldForSlot, available: event.capacity - soldForSlot };
+    }));
     res.json(slotsData);
 });
 

@@ -729,7 +729,7 @@ async function triggerStandardEventSelection(eventData) {
             });
         });
 
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({ top: 0, behavior: 'auto' });
         document.querySelector('.district-date-pill')?.click(); 
     }
 }
