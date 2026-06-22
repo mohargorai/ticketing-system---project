@@ -12,12 +12,8 @@ const http = require('http');
 const { Server } = require('socket.io');  
 const compression = require('compression'); 
 const redis = require('redis'); 
-const mongoSanitize = require('express-mongo-sanitize');
-require('dotenv').config();
-
-const escapeRegex = (text) => {
-    return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
-};
+const mongoSanitize = require('express-mongo-sanitize'); 
+require('dotenv').config();                 
 
 const User = require('./models/User'); 
 const Event = require('./models/Event');
@@ -68,7 +64,9 @@ app.set('trust proxy', 1);
 app.use(compression()); 
 app.use(express.json({ limit: '50mb' })); 
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
-app.use(mongoSanitize()); // Prevent NoSQL Injection
+
+// Sanitize data to prevent NoSQL Injection
+app.use(mongoSanitize());
 
 app.use('/api', (req, res, next) => {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
@@ -119,11 +117,10 @@ const requireAdmin = (req, res, next) => {
 app.post('/api/signup', async (req, res) => {
     try {
         const { username, password } = req.body;
-        if (!username || typeof username !== 'string' || !password) return res.status(400).json({ success: false, message: "Fields required." });
-        const safeUsername = escapeRegex(username.trim());
-        const existingUser = await User.findOne({ username: { $regex: new RegExp(`^${safeUsername}$`, 'i') } }).lean();
+        if (!username || !password) return res.status(400).json({ success: false, message: "Fields required." });
+        const existingUser = await User.findOne({ username: { $regex: new RegExp(`^${username.trim()}$`, 'i') } }).lean();
         if (existingUser) return res.status(400).json({ success: false, message: "it's not available try something else" });
-        await User.create({ username: username.trim(), password: await bcrypt.hash(String(password), 10), isAdmin: false });
+        await User.create({ username: username.trim(), password: await bcrypt.hash(password, 10), isAdmin: false });
         io.emit('dashboardUpdate'); res.json({ success: true, message: "Account created!" });
     } catch (err) { res.status(500).json({ success: false, message: "Server error." }); }
 });
@@ -132,23 +129,18 @@ app.post('/api/admin/signup', async (req, res) => {
     try {
         const { username, password, secretKey } = req.body;
         if (secretKey !== process.env.ADMIN_SECRET) return res.status(403).json({ success: false, message: "Invalid Secret Key." });
-        if (!username || typeof username !== 'string' || !password) return res.status(400).json({ success: false, message: "Fields required." });
-        const safeUsername = escapeRegex(username.trim());
-        const existingUser = await User.findOne({ username: { $regex: new RegExp(`^${safeUsername}$`, 'i') } }).lean();
+        const existingUser = await User.findOne({ username: { $regex: new RegExp(`^${username.trim()}$`, 'i') } }).lean();
         if (existingUser) return res.status(400).json({ success: false, message: "it's not available try something else" });
-        await User.create({ username: username.trim(), password: await bcrypt.hash(String(password), 10), isAdmin: true });
+        await User.create({ username: username.trim(), password: await bcrypt.hash(password, 10), isAdmin: true });
         io.emit('dashboardUpdate'); res.json({ success: true, message: "Admin account created." });
     } catch (err) { res.status(500).json({ success: false, message: "Server error." }); }
 });
 
 app.post('/api/login', async (req, res) => {
     try {
-        const { username, password } = req.body;
-        if (!username || typeof username !== 'string' || !password) return res.status(400).json({ success: false, message: "Fields required." });
-        const safeUsername = escapeRegex(username.trim());
-        const user = await User.findOne({ username: { $regex: new RegExp(`^${safeUsername}$`, 'i') } }).lean();
+        const user = await User.findOne({ username: { $regex: new RegExp(`^${req.body.username.trim()}$`, 'i') } }).lean();
         if (!user) return res.status(404).json({ success: false, notFound: true, message: "User not found." });
-        if (!(await bcrypt.compare(String(password), user.password))) return res.status(401).json({ success: false, message: "Incorrect password." });
+        if (!(await bcrypt.compare(req.body.password, user.password))) return res.status(401).json({ success: false, message: "Incorrect password." });
         req.session.userId = user._id; req.session.username = user.username; req.session.isAdmin = user.isAdmin;
         res.json({ success: true, username: user.username, isAdmin: user.isAdmin });
     } catch (err) { res.status(500).json({ success: false, message: "Server error." }); }
