@@ -122,7 +122,7 @@ const switchView = (viewId) => {
         document.getElementById(id)?.classList.add('d-none');
     });
     document.getElementById(viewId)?.classList.remove('d-none');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: 'auto' });
 
     const navbarCollapse = document.getElementById('mobileNavbar');
     if (navbarCollapse && navbarCollapse.classList.contains('show')) {
@@ -1049,7 +1049,7 @@ safeBind('confirm-payment-btn', 'click', async (e) => {
     const originalText = "Pay Securely Now";
     btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Processing...';
     btn.disabled = true;
-
+    // Instant processing instead of artificial timeout
     setTimeout(async () => {
         try {
             const endpoint = pendingPaymentData.type === 'seated' ? '/api/events/book-seats' : '/api/events/book-general';
@@ -1070,7 +1070,7 @@ safeBind('confirm-payment-btn', 'click', async (e) => {
             }
         } catch (err) { if(paymentModalInstance) paymentModalInstance.hide(); alert("Network error during payment processing.");
         } finally { btn.innerText = originalText; btn.disabled = false; btn.dataset.processing = "false"; pendingPaymentData = null; }
-    }, 1500); 
+    }, 0); 
 });
 
 // ==========================================
@@ -1579,7 +1579,7 @@ safeBind('profile-form', 'submit', async (e) => {
         if(alertBox) { alertBox.classList.remove('d-none', 'alert-danger', 'alert-success'); alertBox.classList.add(data.success ? 'alert-success' : 'alert-danger'); alertBox.innerText = data.message; }
         if(data.success) {
             const badge = document.getElementById('username-badge'); if(badge) badge.innerText = data.newUsername || userEl.value.trim();
-            setTimeout(() => { switchView('booking-section'); if(submitBtn){submitBtn.disabled = false; submitBtn.innerText = "Save Changes";} }, 1500);
+            setTimeout(() => { switchView('booking-section'); if(submitBtn){submitBtn.disabled = false; submitBtn.innerText = "Save Changes";} }, 0);
         } else if(submitBtn) { submitBtn.disabled = false; submitBtn.innerText = "Save Changes"; }
     } catch (err) {}
 });
