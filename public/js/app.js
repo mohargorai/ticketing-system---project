@@ -941,6 +941,35 @@ async function renderSeatsForEvent(eventId, date, time, isSoftUpdate = false) {
     }
 }
 
+// 🎨 Dynamic Price Animation
+function animatePrice(element, newValue) {
+    if(!element) return;
+    const startVal = parseFloat(element.innerText.replace(/,/g, '')) || 0;
+    const endVal = parseFloat(newValue);
+    if(startVal === endVal) return; 
+    
+    const duration = 400; 
+    let startTimestamp = null;
+    
+    if(element.animationFrameId) cancelAnimationFrame(element.animationFrameId);
+    
+    const step = (timestamp) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+        const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+        const currentVal = startVal + (endVal - startVal) * easeProgress;
+        
+        element.innerText = currentVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        
+        if (progress < 1) {
+            element.animationFrameId = window.requestAnimationFrame(step);
+        } else {
+            element.innerText = endVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+    };
+    element.animationFrameId = window.requestAnimationFrame(step);
+}
+
 // 🚨 FIXED: Order Summary Calculation & Display Math
 function updateOrderSummary(reset = false) {
     const checkoutBtn = document.getElementById('sidebar-checkout-btn');
@@ -956,8 +985,8 @@ function updateOrderSummary(reset = false) {
         if(seatsList) seatsList.innerHTML = ''; 
         if(container) container.classList.add('d-none');
         if(calcText) calcText.innerText = `Tickets (0)`; 
-        if(subtotalText) subtotalText.innerText = '0.00'; 
-        totalText.innerText = '0.00'; checkoutBtn.disabled = true; return;
+        if(subtotalText) animatePrice(subtotalText, 0); 
+        animatePrice(totalText, 0); checkoutBtn.disabled = true; return;
     }
 
     let sub = 0; let count = 0;
@@ -985,8 +1014,8 @@ function updateOrderSummary(reset = false) {
     const finalTotal = parseFloat(sub.toFixed(2));
     finalCheckoutTotal = finalTotal; 
     
-    if(subtotalText) subtotalText.innerText = finalTotal.toFixed(2);
-    totalText.innerText = finalTotal.toFixed(2);
+    if(subtotalText) animatePrice(subtotalText, finalTotal);
+    animatePrice(totalText, finalTotal);
 }
 
 safeBind('seat-map', 'click', async (e) => {
