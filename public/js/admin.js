@@ -580,7 +580,7 @@ function createVenueBlock(data = null) {
         if(!query) return;
         searchBtn.innerHTML = '...';
         try {
-            const res = await fetch(\`https://nominatim.openstreetmap.org/search?format=json&q=\${encodeURIComponent(query)}&addressdetails=1\`);
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&addressdetails=1`);
             const results = await res.json();
             resultsUl.innerHTML = '';
             if(results.length === 0) {
