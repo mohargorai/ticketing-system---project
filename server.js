@@ -271,7 +271,10 @@ app.get('/api/seats/:eventId', async (req, res) => {
     }
 
     const allSeats = [];
-    for(let i=1; i<=event.capacity; i++) {
+    const location = event.locations.find(l => l._id.toString() === locationId);
+    const capacity = location ? location.capacity : 0;
+
+    for(let i=1; i<=capacity; i++) {
         const sId = `S${i}`;
         allSeats.push({ seatId: sId, status: seatMap.get(sId) || 'Available' });
     }
