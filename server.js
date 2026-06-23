@@ -442,17 +442,20 @@ app.put('/api/admin/users/:id/role', requireAdmin, async (req, res) => {
 app.get('/api/admin/users/:id/tickets', requireAdmin, async (req, res) => {
     try {
         const mySeats = await Seat.find({ userId: req.params.id }).populate('eventId', '-imageUrl').lean();
-        const tickets = mySeats.filter(s => s.eventId).map(seat => ({ 
-            eventId: seat.eventId._id, 
-            eventTitle: seat.eventId.title, 
-            bookingDate: seat.bookingDate, 
-            timeSlot: seat.timeSlot, 
-            location: seat.eventId.location, 
-            eventType: seat.eventId.eventType, 
-            price: seat.eventId.price || 0, 
-            seatId: seat.seatId,
-            endDate: seat.eventId.endDate 
-        }));
+        const tickets = mySeats.filter(s => s.eventId).map(seat => {
+            const location = seat.eventId.locations ? seat.eventId.locations.find(l => l._id.toString() === seat.locationId.toString()) : null;
+            return { 
+                eventId: seat.eventId._id, 
+                eventTitle: seat.eventId.title, 
+                bookingDate: seat.bookingDate, 
+                timeSlot: seat.timeSlot, 
+                location: location ? location.venueName + ', ' + location.city : 'Unknown', 
+                eventType: seat.eventId.eventType, 
+                price: location ? location.price : 0, 
+                seatId: seat.seatId,
+                endDate: location ? location.endDate : null 
+            };
+        });
         res.json({ success: true, tickets });
     } catch (err) { res.status(500).json({ success: false, message: "Error fetching tickets." }); }
 });

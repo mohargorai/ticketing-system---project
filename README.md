@@ -32,12 +32,12 @@ Whether managing a massive stadium concert or a local cinema chain, VibePass ens
 - ⏱️ **5-Minute Seat Locking & Expiration** – Users can temporarily lock up to 10 seats. A background process intelligently purges locks older than 5 minutes to prevent seat hoarding.
 - 🛡️ **ACID-Compliant Protection** – Utilizes MongoDB atomic `$inc` operators and strict compound indexing (`eventId + seatId + bookingDate + timeSlot`) to prevent millisecond race conditions.
 - 🚀 **Redis Caching** – High-traffic event feeds are served from memory to drastically reduce database load. Cache invalidation automatically fires upon seat booking or cancellation.
-- 🇮🇳 **Live OpenStreetMap Integration** – Integrates Nominatim API and Browser Geolocation for instantaneous, precise city search suggestions in the Admin dashboard.
-- 🎥 **Intelligent Multi-Venue Architecture** – Events now feature native multi-venue support natively in the MongoDB schema. Identical movie screenings across different venues are programmatically merged into an enterprise-grade nested selection flow (similar to BookMyShow), complete with map directions.
+- 🇮🇳 **Live OpenStreetMap Integration & Google Maps Fallback** – Integrates Nominatim API for instantaneous city search suggestions in the Admin dashboard. Frontend includes native Google Maps text-search routing for missing OpenStreetMap geocoordinates.
+- 🎥 **Intelligent Multi-Venue Architecture** – Events now feature native multi-venue support in the MongoDB schema. Identical movie screenings across different venues are programmatically merged into an enterprise-grade nested selection flow, dynamically filtered by the user's selected global city.
 - 💺 **Symmetrical Seat Matrix Engine** – A mathematically precise flexbox engine that detects short rows and perfectly centers them with invisible placeholders for a flawless auditorium layout.
-- 📱 **Premium Glassmorphism & Responsive Design** – Features a dynamic glassmorphic bottom navigation dock, sleek translucent cards, and a fully adaptive seat matrix ensuring a flawless experience on mobile devices.
+- 📱 **Premium Glassmorphism & Responsive Design** – Features a dynamic glassmorphic bottom navigation dock, sleek translucent cards, and a fully adaptive seat matrix with strict overflow protections ensuring a flawless experience on mobile devices.
 - 🎟️ **Dynamic Passes & PDFs** – Client-side QR generation (`qrcodejs`) and customized perforated stub PDFs (`jsPDF`) offset heavy backend document rendering.
-- 🔢 **Animated Checkout Pricing** – The Order Summary features a custom JavaScript easing function that smoothly counts up/down dynamically as users add or remove seats, mimicking premium Native App experiences.
+- 🔢 **Animated Checkout Pricing** – The Order Summary features a custom JavaScript easing function that smoothly counts up/down dynamically as users add or remove seats, mimicking premium Native App experiences, complete with strict UI cache purging post-checkout.
 - 🧹 **Optimistic Seat Clearing** – A prominent "Clear All" action immediately purges the local UI selection state while silently firing off a robust array of parallel backend requests to instantly release the server-side locks.
 
 ---
