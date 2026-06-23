@@ -1146,8 +1146,8 @@ safeBind('confirm-payment-btn', 'click', async (e) => {
                 if(pendingPaymentData.type === 'seated') { 
                     selectedSeats = [];
                     lockedSeatsData = [];
-                    updateOrderSummary();
                     await renderSeatsForEvent(pendingPaymentData.eventId, pendingPaymentData.locationId, pendingPaymentData.selectedDate, pendingPaymentData.timeSlot, true); 
+                    updateOrderSummary(true); 
                 } 
                 else { const q = document.getElementById('general-qty'); if(q) q.value = 1; await loadEventDataForDateAndTime(pendingPaymentData.selectedDate, pendingPaymentData.timeSlot, true); }
                 setTimeout(() => alert("✅ Payment Successful!\n\n" + data.message), 400);
