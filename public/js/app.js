@@ -1481,6 +1481,7 @@ function showTicketDetail(ticketData) {
     
     <div class="d-flex justify-content-center gap-3 mb-5 pb-5 mt-4">
         <button id="download-pdf-btn" class="btn btn-outline-secondary text-white border-dark px-4 py-2 fw-bold d-flex align-items-center gap-2"><span class="fs-5">📥</span> Download PDF</button>
+        <button id="detail-back-bookings-btn" class="btn btn-dark px-4 py-2 fw-bold border-secondary d-flex align-items-center gap-2"><span>🎫</span> Back to Bookings</button>
         <button id="detail-back-home-btn" class="btn btn-dark px-4 py-2 fw-bold border-secondary d-flex align-items-center gap-2"><span>🏠</span> Back to Home</button>
     </div>`;
 
@@ -1627,6 +1628,7 @@ function showTicketDetail(ticketData) {
     });
 
     safeBind('detail-back-home-btn', 'click', () => { document.getElementById('home-logo')?.click(); });
+    safeBind('detail-back-bookings-btn', 'click', () => { switchView('tickets-section'); });
 }
 
 safeBind('profile-link-btn', 'click', async (e) => {
