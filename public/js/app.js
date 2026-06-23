@@ -638,7 +638,12 @@ function showCinemaSelection(eventId) {
     if(cinemaContainer) cinemaContainer.classList.remove('d-none');
     
     if(cinemaPills) {
-        cinemaPills.innerHTML = event.locations.map(loc => {
+        let displayLocations = event.locations;
+        if (currentLocationFilter !== 'All Cities') {
+            displayLocations = event.locations.filter(loc => loc.city && loc.city.toLowerCase().includes(currentLocationFilter.toLowerCase()));
+        }
+
+        cinemaPills.innerHTML = displayLocations.map(loc => {
             const locName = loc.venueName || 'Unknown Location';
             const locCity = loc.city || '';
             const gmapsQuery = encodeURIComponent(`${locName} ${locCity}`.trim());
