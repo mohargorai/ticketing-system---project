@@ -586,6 +586,8 @@ function displayEvents(events) {
                     eventType: ev.eventType,
                     imageUrl: ev.imageUrl,
                     price: ev.price,
+                    description: ev.description,
+                    location: ev.location,
                     subEvents: [ev]
                 });
                 groupedEvents.push(movieGroups.get(normalizedTitle));
@@ -633,8 +635,7 @@ function displayEvents(events) {
                     <h5 class="fw-bold mb-1 text-white">${e.title}</h5>
                     <p class="text-muted small mb-3" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 40px;">${e.description || 'Experience the ultimate event.'}</p>
                     <div class="d-flex gap-2 mb-3"><span class="badge bg-dark border border-secondary ${typeColor}">${typeIcon} ${e.eventType}</span>${catBadge}</div>
-                    ${!e.isGroup ? `<p class="small text-muted mb-3">📍 ${e.location || 'Venue TBA'}</p>` : ''}
-                    
+                    <p class="small text-muted mb-3">📍 ${e.location || 'Venue TBA'}</p>
                     <div class="d-flex justify-content-between align-items-end mt-auto pt-3 border-top" style="border-color: #262626 !important;">
                         <div><span class="text-muted d-block" style="font-size:11px;">Starting from</span><span class="fw-bold fs-5 text-white">₹${displayPrice}</span></div>
                         <button class="btn ${btnState} fw-bold px-4 rounded-3 book-now-btn">${btnText}</button>
