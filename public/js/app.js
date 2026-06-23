@@ -405,6 +405,7 @@ function renderLocationModal() {
             document.getElementById('close-location-modal')?.click();
             renderLocationModal();
             applyFilters();
+            switchView('booking-section');
         });
     });
 }
@@ -521,6 +522,7 @@ safeBind('city-search-input', 'input', (e) => {
                     document.getElementById('close-location-modal')?.click();
                     renderLocationModal();
                     applyFilters();
+                    switchView('booking-section');
                     
                     e.target.value = '';
                     dropdown.classList.add('d-none');
