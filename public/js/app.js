@@ -634,7 +634,8 @@ function showCinemaSelection(eventId) {
         cinemaPills.innerHTML = event.locations.map(loc => {
             const locName = loc.venueName || 'Unknown Location';
             const locCity = loc.city || '';
-            const gmapsLink = (loc.lat && loc.lon) ? `<a href="https://www.google.com/maps/dir/?api=1&destination=${loc.lat},${loc.lon}" target="_blank" class="btn btn-sm btn-outline-info ms-2" onclick="event.stopPropagation();">🧭 Directions</a>` : '';
+            const gmapsQuery = encodeURIComponent(`${locName} ${locCity}`.trim());
+            const gmapsLink = `<a href="https://www.google.com/maps/search/?api=1&query=${gmapsQuery}" target="_blank" class="btn btn-sm btn-outline-info ms-2" onclick="event.stopPropagation();">🧭 Directions</a>`;
             return `
             <div class="card cinema-hall-card border-secondary p-3 mb-2" style="cursor: pointer; background: rgba(255,255,255,0.03); border-radius: 16px; transition: all 0.3s var(--ease-smooth); backdrop-filter: blur(10px);" data-loc-id="${loc._id}" onmouseover="this.style.background='rgba(255,255,255,0.08)'; this.style.borderColor='var(--brand-primary)';" onmouseout="this.style.background='rgba(255,255,255,0.03)'; this.style.borderColor='var(--border-color)';">
                 <div class="d-flex justify-content-between align-items-center">

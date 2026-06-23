@@ -522,7 +522,7 @@ function createVenueBlock(data = null) {
         <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2" onclick="document.getElementById('${vId}').remove()">X</button>
         <div class="row g-2">
             <div class="col-12 col-md-6">
-                <label class="form-label text-info small">Venue Search (OSM)</label>
+                <label class="form-label text-info small">Auto-Fill Location (Optional)</label>
                 <div class="input-group input-group-sm">
                     <input type="text" class="form-control venue-search-input" placeholder="Search address...">
                     <button class="btn btn-outline-info search-osm-btn" type="button">Search</button>
