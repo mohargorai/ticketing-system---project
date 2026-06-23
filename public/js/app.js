@@ -1143,7 +1143,12 @@ safeBind('confirm-payment-btn', 'click', async (e) => {
 
             if (data.success) {
                 if(paymentModalInstance) paymentModalInstance.hide();
-                if(pendingPaymentData.type === 'seated') { await renderSeatsForEvent(pendingPaymentData.eventId, pendingPaymentData.selectedDate, pendingPaymentData.timeSlot); } 
+                if(pendingPaymentData.type === 'seated') { 
+                    selectedSeats = [];
+                    lockedSeatsData = [];
+                    updateCheckoutTotal();
+                    await renderSeatsForEvent(pendingPaymentData.eventId, pendingPaymentData.locationId, pendingPaymentData.selectedDate, pendingPaymentData.timeSlot, true); 
+                } 
                 else { const q = document.getElementById('general-qty'); if(q) q.value = 1; await loadEventDataForDateAndTime(pendingPaymentData.selectedDate, pendingPaymentData.timeSlot, true); }
                 setTimeout(() => alert("✅ Payment Successful!\n\n" + data.message), 400);
             } else {
