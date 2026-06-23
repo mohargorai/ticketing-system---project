@@ -330,13 +330,20 @@ function applyFilters() {
         if (now > new Date(ev.endDate)) return false; 
         
         const safeTitle = ev.title ? ev.title.toLowerCase() : '';
-        const safeLoc = ev.location ? ev.location.toLowerCase() : '';
         
-        const matchesSearch = safeTitle.includes(searchTerm) || safeLoc.includes(searchTerm);
+        // Build a combined string of all venues and cities for search
+        const allLocStrings = ev.locations ? ev.locations.map(l => `${l.venueName} ${l.city}`).join(' ').toLowerCase() : '';
+        
+        const matchesSearch = safeTitle.includes(searchTerm) || allLocStrings.includes(searchTerm);
         const matchesCategory = currentCategoryFilter === 'All' || ev.category === currentCategoryFilter;
         
-        // Location Filter Logic (Checks if the city string is inside the location field)
-        const matchesLocation = currentLocationFilter === 'All Cities' || safeLoc.includes(currentLocationFilter.toLowerCase());
+        // Location Filter Logic
+        let matchesLocation = false;
+        if (currentLocationFilter === 'All Cities') {
+            matchesLocation = true;
+        } else if (ev.locations) {
+            matchesLocation = ev.locations.some(l => l.city && l.city.toLowerCase().includes(currentLocationFilter.toLowerCase()));
+        }
 
         return matchesSearch && matchesCategory && matchesLocation;
     });
@@ -349,10 +356,10 @@ function applyFilters() {
 function extractUniqueCities(events) {
     const cities = new Set();
     events.forEach(e => {
-        if (e.location) {
-            const parts = e.location.split(',');
-            const city = parts[parts.length - 1].trim();
-            if (city) cities.add(city);
+        if (e.locations) {
+            e.locations.forEach(loc => {
+                if (loc.city) cities.add(loc.city.trim());
+            });
         }
     });
     return Array.from(cities).sort();
