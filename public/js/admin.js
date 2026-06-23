@@ -527,6 +527,7 @@ function createVenueBlock(data = null) {
                     <input type="text" class="form-control venue-search-input" placeholder="Search address...">
                     <button class="btn btn-outline-info search-osm-btn" type="button">Search</button>
                 </div>
+                <div class="form-text text-muted" style="font-size: 10px;">If not found, type the City and Venue Name manually.</div>
                 <ul class="list-group mt-1 osm-results" style="position: absolute; z-index: 1000; width: 95%; display:none;"></ul>
             </div>
             <div class="col-12 col-md-3">
@@ -584,7 +585,8 @@ function createVenueBlock(data = null) {
             const results = await res.json();
             resultsUl.innerHTML = '';
             if(results.length === 0) {
-                resultsUl.innerHTML = '<li class="list-group-item bg-dark text-muted">No results found</li>';
+                resultsUl.innerHTML = '<li class="list-group-item bg-dark text-muted">No results found. Please enter City & Venue Name manually.</li>';
+                resultsUl.style.display = 'block';
             } else {
                 results.slice(0, 5).forEach(r => {
                     const li = document.createElement('li');
