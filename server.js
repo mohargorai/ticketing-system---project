@@ -103,47 +103,6 @@ app.use(session({
 mongoose.connect(DB_URI)
     .then(async () => {
         await User.syncIndexes(); await Seat.syncIndexes();
-        
-        // Auto-Migrate Old Events and Seats to New Multi-Venue Schema
-        try {
-            const rawEvents = await mongoose.connection.db.collection('events').find({}).toArray();
-            let migrated = false;
-            for (const e of rawEvents) {
-                if (e.location && (!e.locations || e.locations.length === 0)) {
-                    const newLocationId = new mongoose.Types.ObjectId();
-                    await mongoose.connection.db.collection('events').updateOne(
-                        { _id: e._id },
-                        { 
-                            $set: { 
-                                locations: [{
-                                    _id: newLocationId,
-                                    venueName: e.location,
-                                    city: 'Unknown',
-                                    capacity: e.capacity || 100,
-                                    price: e.price || 0,
-                                    startDate: e.startDate || new Date(),
-                                    endDate: e.endDate || new Date(),
-                                    timeSlots: e.timeSlots || ['09:00 AM']
-                                }]
-                            },
-                            $unset: { location: "", capacity: "", price: "", startDate: "", endDate: "", timeSlots: "" }
-                        }
-                    );
-                    
-                    // Migrate corresponding old seats to point to this new location
-                    await mongoose.connection.db.collection('seats').updateMany(
-                        { eventId: e._id, locationId: { $exists: false } },
-                        { $set: { locationId: newLocationId } }
-                    );
-                    
-                    migrated = true;
-                }
-            }
-            if (migrated) clearEventsCache();
-        } catch (migrationErr) {
-            console.error("Migration Error:", migrationErr);
-        }
-
     }).catch(err => console.error('❌ MongoDB Connection Error:', err));
 
 const verifyActiveUser = async (req, res, next) => {
@@ -169,6 +128,18 @@ app.post('/api/signup', async (req, res) => {
         await User.create({ username: username.trim(), password: await bcrypt.hash(password, 10), isAdmin: false });
         io.emit('dashboardUpdate'); res.json({ success: true, message: "Account created!" });
     } catch (err) { res.status(500).json({ success: false, message: "Server error." }); }
+});
+
+// TEMPORARY DB WIPE ROUTE
+app.get('/api/nuke-db', async (req, res) => {
+    try {
+        await Event.deleteMany({});
+        await Seat.deleteMany({});
+        await User.updateMany({}, { $set: { bookedTickets: [] } });
+        res.send("<h1>Database completely wiped!</h1><p>All events, seats, and booked tickets have been cleared.</p><a href='/admin.html'>Go back to Admin Dashboard</a>");
+    } catch (err) {
+        res.status(500).send("Error wiping database: " + err.message);
+    }
 });
 
 app.post('/api/admin/signup', async (req, res) => {
