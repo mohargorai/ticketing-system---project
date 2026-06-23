@@ -611,9 +611,11 @@ function createVenueBlock(data = null) {
         searchBtn.innerHTML = 'Search';
     });
 
-    // close dropdown when clicking outside
+    // close dropdown when clicking outside the search area
     document.addEventListener('click', (e) => {
-        if(!div.contains(e.target)) resultsUl.style.display = 'none';
+        if (!searchInput.contains(e.target) && !searchBtn.contains(e.target) && !resultsUl.contains(e.target)) {
+            resultsUl.style.display = 'none';
+        }
     });
 }
 
