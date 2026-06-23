@@ -193,37 +193,44 @@ app.get('/api/events', async (req, res) => {
 });
 
 app.get('/api/events/:eventId/timeslots-availability', async (req, res) => {
-    const { date } = req.query;
-    if (!date) return res.status(400).json({error: "Date required"});
-    const event = await Event.findById(req.params.eventId).select('capacity timeSlots').lean();
+    const { date, locationId } = req.query;
+    if (!date || !locationId) return res.status(400).json({error: "Date and locationId required"});
+    const event = await Event.findById(req.params.eventId).select('locations').lean();
     if (!event) return res.status(404).json({error: "Event not found"});
+    
+    const location = event.locations.find(l => l._id.toString() === locationId);
+    if (!location) return res.status(404).json({error: "Location not found"});
 
-    const slotsData = await Promise.all(event.timeSlots.map(async (slot) => {
-        const soldForSlot = await Seat.countDocuments({ eventId: req.params.eventId, bookingDate: date, timeSlot: slot });
-        return { time: slot, capacity: event.capacity, sold: soldForSlot, available: event.capacity - soldForSlot };
+    const slotsData = await Promise.all(location.timeSlots.map(async (slot) => {
+        const soldForSlot = await Seat.countDocuments({ eventId: req.params.eventId, locationId: locationId, bookingDate: date, timeSlot: slot });
+        return { time: slot, capacity: location.capacity, sold: soldForSlot, available: location.capacity - soldForSlot };
     }));
     res.json(slotsData);
 });
 
 app.get('/api/events/:eventId/availability', async (req, res) => {
-    const { date, timeSlot } = req.query;
-    if (!date || !timeSlot) return res.status(400).json({error: "Required"});
-    const event = await Event.findById(req.params.eventId).select('capacity').lean();
+    const { date, timeSlot, locationId } = req.query;
+    if (!date || !timeSlot || !locationId) return res.status(400).json({error: "Required date, timeSlot, locationId"});
+    const event = await Event.findById(req.params.eventId).select('locations').lean();
+    if (!event) return res.status(404).json({error: "Event not found"});
+    const location = event.locations.find(l => l._id.toString() === locationId);
+    if (!location) return res.status(404).json({error: "Location not found"});
     
     const fiveMinsAgo = new Date(Date.now() - 5 * 60 * 1000);
     const sold = await Seat.countDocuments({ 
-        eventId: req.params.eventId, bookingDate: date, timeSlot, 
+        eventId: req.params.eventId, locationId: locationId, bookingDate: date, timeSlot, 
         $or: [ { status: 'Booked' }, { status: 'Locked', lockedAt: { $gt: fiveMinsAgo } } ] 
     });
     
-    res.json({ capacity: event.capacity, sold, available: event.capacity - sold });
+    res.json({ capacity: location.capacity, sold, available: location.capacity - sold });
 });
 
 app.get('/api/seats/:eventId', async (req, res) => {
-    const { date, timeSlot } = req.query;
+    const { date, timeSlot, locationId } = req.query;
+    if (!locationId) return res.status(400).json({error: "locationId required"});
     const [event, seatsData] = await Promise.all([
-        Event.findById(req.params.eventId).select('capacity').lean(),
-        Seat.find({ eventId: req.params.eventId, bookingDate: date, timeSlot }).lean()
+        Event.findById(req.params.eventId).select('locations').lean(),
+        Seat.find({ eventId: req.params.eventId, locationId: locationId, bookingDate: date, timeSlot }).lean()
     ]);
     
     const now = new Date();
@@ -260,13 +267,13 @@ app.get('/api/seats/:eventId', async (req, res) => {
 });
 
 app.post('/api/seats/lock', verifyActiveUser, async (req, res) => {
-    const { eventId, seatId, date, timeSlot } = req.body;
+    const { eventId, locationId, seatId, date, timeSlot } = req.body;
     
-    const myLocks = await Seat.countDocuments({ eventId, bookingDate: date, timeSlot, userId: req.session.userId, status: 'Locked' });
+    const myLocks = await Seat.countDocuments({ eventId, locationId, bookingDate: date, timeSlot, userId: req.session.userId, status: 'Locked' });
     if (myLocks >= 10) return res.status(400).json({ success: false, message: "You can only lock up to 10 seats at a time." });
 
     try {
-        const existing = await Seat.findOne({ eventId, seatId, bookingDate: date, timeSlot });
+        const existing = await Seat.findOne({ eventId, locationId, seatId, bookingDate: date, timeSlot });
         const now = new Date();
         const fiveMinutes = 5 * 60 * 1000;
 
@@ -277,7 +284,7 @@ app.post('/api/seats/lock', verifyActiveUser, async (req, res) => {
                     existing.userId = req.session.userId;
                     existing.lockedAt = now;
                     await existing.save();
-                    io.emit('seatUpdate', { eventId, date, timeSlot, seatId, status: 'Locked' });
+                    io.emit('seatUpdate', { eventId, locationId, date, timeSlot, seatId, status: 'Locked' });
                     return res.json({ success: true });
                 } else if (String(existing.userId) === String(req.session.userId)) {
                     existing.lockedAt = now;
@@ -288,8 +295,8 @@ app.post('/api/seats/lock', verifyActiveUser, async (req, res) => {
                 }
             }
         } else {
-            await Seat.create({ eventId, seatId, bookingDate: date, timeSlot, status: 'Locked', userId: req.session.userId, lockedAt: now });
-            io.emit('seatUpdate', { eventId, date, timeSlot, seatId, status: 'Locked' });
+            await Seat.create({ eventId, locationId, seatId, bookingDate: date, timeSlot, status: 'Locked', userId: req.session.userId, lockedAt: now });
+            io.emit('seatUpdate', { eventId, locationId, date, timeSlot, seatId, status: 'Locked' });
             return res.json({ success: true });
         }
     } catch (err) {
@@ -299,9 +306,9 @@ app.post('/api/seats/lock', verifyActiveUser, async (req, res) => {
 });
 
 app.post('/api/seats/unlock', verifyActiveUser, async (req, res) => {
-    const { eventId, seatId, date, timeSlot } = req.body;
-    await Seat.deleteOne({ eventId, seatId, bookingDate: date, timeSlot, userId: req.session.userId, status: 'Locked' });
-    io.emit('seatUpdate', { eventId, date, timeSlot, seatId, status: 'Available' });
+    const { eventId, locationId, seatId, date, timeSlot } = req.body;
+    await Seat.deleteOne({ eventId, locationId, seatId, bookingDate: date, timeSlot, userId: req.session.userId, status: 'Locked' });
+    io.emit('seatUpdate', { eventId, locationId, date, timeSlot, seatId, status: 'Available' });
     res.json({ success: true });
 });
 
@@ -309,10 +316,10 @@ app.post('/api/seats/unlock', verifyActiveUser, async (req, res) => {
 // 🛒 CORE BOOKING LOGIC 
 // ==========================================
 app.post('/api/events/book-seats', verifyActiveUser, async (req, res) => {
-    const { eventId, seats, selectedDate, timeSlot } = req.body; 
+    const { eventId, locationId, seats, selectedDate, timeSlot } = req.body; 
     try {
         const result = await Seat.updateMany(
-            { eventId, seatId: { $in: seats }, bookingDate: selectedDate, timeSlot, userId: req.session.userId, status: 'Locked' },
+            { eventId, locationId, seatId: { $in: seats }, bookingDate: selectedDate, timeSlot, userId: req.session.userId, status: 'Locked' },
             { $set: { status: 'Booked', bookedBy: req.session.username, lockedAt: null } }
         );
         
@@ -323,29 +330,30 @@ app.post('/api/events/book-seats', verifyActiveUser, async (req, res) => {
         await Event.findByIdAndUpdate(eventId, { $inc: { ticketsSold: seats.length } });
         
         clearEventsCache(); 
-        io.emit('seatUpdate', { eventId, date: selectedDate, timeSlot }); io.emit('dashboardUpdate'); 
+        io.emit('seatUpdate', { eventId, locationId, date: selectedDate, timeSlot }); io.emit('dashboardUpdate'); 
         res.json({ success: true, message: `Successfully booked ${seats.length} seat(s)!` });
     } catch (err) { res.status(400).json({ success: false, message: "Checkout failed. Please try again." }); }
 });
 
 app.post('/api/events/book-general', verifyActiveUser, async (req, res) => {
-    const { eventId, qty, selectedDate, timeSlot } = req.body;
+    const { eventId, locationId, qty, selectedDate, timeSlot } = req.body;
     try {
-        const [event, currentSold] = await Promise.all([
-            Event.findById(eventId).select('capacity').lean(),
-            Seat.countDocuments({ eventId, bookingDate: selectedDate, timeSlot })
-        ]);
+        const event = await Event.findById(eventId).select('locations').lean();
         if (!event) return res.status(404).json({ success: false, message: "Event not found." });
-        if (currentSold + Number(qty) > event.capacity) return res.status(400).json({ success: false, message: "Not enough tickets." });
+        const location = event.locations.find(l => l._id.toString() === locationId);
+        if (!location) return res.status(404).json({ success: false, message: "Location not found." });
+
+        const currentSold = await Seat.countDocuments({ eventId, locationId, bookingDate: selectedDate, timeSlot });
+        if (currentSold + Number(qty) > location.capacity) return res.status(400).json({ success: false, message: "Not enough tickets." });
 
         const tickets = Array.from({length: Number(qty)}).map((_, i) => ({
-            eventId: event._id, seatId: `GA-${Math.random().toString(36).substring(2, 8).toUpperCase()}-${i+1}`, bookingDate: selectedDate, timeSlot, status: 'Booked', bookedBy: req.session.username, userId: req.session.userId 
+            eventId: event._id, locationId, seatId: `GA-${Math.random().toString(36).substring(2, 8).toUpperCase()}-${i+1}`, bookingDate: selectedDate, timeSlot, status: 'Booked', bookedBy: req.session.username, userId: req.session.userId 
         }));
         await Seat.insertMany(tickets);
         await Event.findByIdAndUpdate(eventId, { $inc: { ticketsSold: Number(qty) } });
 
         clearEventsCache(); 
-        io.emit('seatUpdate', { eventId, date: selectedDate, timeSlot }); io.emit('dashboardUpdate'); 
+        io.emit('seatUpdate', { eventId, locationId, date: selectedDate, timeSlot }); io.emit('dashboardUpdate'); 
         res.json({ success: true, message: `Successfully booked ${qty} ticket(s)!` });
     } catch (err) { res.status(500).json({ success: false, message: "Booking error." }); }
 });
@@ -353,27 +361,31 @@ app.post('/api/events/book-general', verifyActiveUser, async (req, res) => {
 // 🚨 MODIFIED: Now returning endDate so frontend history can determine expiration
 app.get('/api/my-tickets', verifyActiveUser, async (req, res) => {
     const mySeats = await Seat.find({ $or: [{ userId: req.session.userId }, { bookedBy: req.session.username }] }).populate('eventId', '-imageUrl').lean();
-    res.json(mySeats.filter(s => s.eventId).map(seat => ({ 
-        eventId: seat.eventId._id, 
-        eventTitle: seat.eventId.title, 
-        bookingDate: seat.bookingDate, 
-        timeSlot: seat.timeSlot, 
-        location: seat.eventId.location, 
-        eventType: seat.eventId.eventType, 
-        price: seat.eventId.price || 0, 
-        seatId: seat.seatId,
-        endDate: seat.eventId.endDate 
-    })));
+    res.json(mySeats.filter(s => s.eventId).map(seat => {
+        const location = seat.eventId.locations ? seat.eventId.locations.find(l => l._id.toString() === seat.locationId.toString()) : null;
+        return { 
+            eventId: seat.eventId._id, 
+            locationId: seat.locationId,
+            eventTitle: seat.eventId.title, 
+            bookingDate: seat.bookingDate, 
+            timeSlot: seat.timeSlot, 
+            location: location ? location.venueName + ', ' + location.city : 'Unknown', 
+            eventType: seat.eventId.eventType, 
+            price: location ? location.price : 0, 
+            seatId: seat.seatId,
+            endDate: location ? location.endDate : null
+        };
+    }));
 });
 
 app.post('/api/events/cancel-booking', verifyActiveUser, async (req, res) => {
     try {
-        const { eventId, seatId, bookingDate, timeSlot } = req.body;
-        const result = await Seat.findOneAndDelete({ eventId, seatId, bookingDate, timeSlot, $or: [{ userId: req.session.userId }, { bookedBy: req.session.username }] });
+        const { eventId, locationId, seatId, bookingDate, timeSlot } = req.body;
+        const result = await Seat.findOneAndDelete({ eventId, locationId, seatId, bookingDate, timeSlot, $or: [{ userId: req.session.userId }, { bookedBy: req.session.username }] });
         if (result) {
             await Event.findByIdAndUpdate(eventId, { $inc: { ticketsSold: -1 } });
             clearEventsCache(); 
-            io.emit('seatUpdate', { eventId, date: bookingDate, timeSlot }); io.emit('dashboardUpdate');
+            io.emit('seatUpdate', { eventId, locationId, date: bookingDate, timeSlot }); io.emit('dashboardUpdate');
             res.json({ success: true, message: "Cancelled." });
         } else res.status(400).json({ success: false, message: "Ticket not found." });
     } catch (err) { res.status(500).json({ success: false, message: "Error cancelling." }); }
@@ -381,8 +393,16 @@ app.post('/api/events/cancel-booking', verifyActiveUser, async (req, res) => {
 
 // --- ADMIN ROUTES ---
 app.get('/api/admin/analytics', requireAdmin, async (req, res) => {
-    const usersCount = await User.countDocuments(); const events = await Event.find().select('title eventType ticketsSold capacity price').lean();
-    let totalRev = 0; let totalSold = 0; let eventStats = events.map(e => { const rev = e.ticketsSold * e.price; totalSold += e.ticketsSold; totalRev += rev; return { title: e.title, type: e.eventType, ticketsSold: e.ticketsSold, capacity: e.capacity, revenue: rev }; });
+    const usersCount = await User.countDocuments(); 
+    const events = await Event.find().select('title eventType ticketsSold locations').lean();
+    let totalRev = 0; let totalSold = 0; 
+    let eventStats = events.map(e => { 
+        const avgPrice = e.locations && e.locations.length > 0 ? e.locations.reduce((sum, l) => sum + l.price, 0) / e.locations.length : 0;
+        const totalCapacity = e.locations ? e.locations.reduce((sum, l) => sum + l.capacity, 0) : 0;
+        const rev = Math.round(e.ticketsSold * avgPrice); 
+        totalSold += e.ticketsSold; totalRev += rev; 
+        return { title: e.title, type: e.eventType, ticketsSold: e.ticketsSold, capacity: totalCapacity, revenue: rev }; 
+    });
     res.json({ success: true, totalUsers: usersCount, totalEvents: events.length, totalTicketsSold: totalSold, totalRevenue: totalRev, eventStats: eventStats.sort((a, b) => b.revenue - a.revenue) });
 });
 
@@ -424,14 +444,28 @@ app.get('/api/admin/users/:id/tickets', requireAdmin, async (req, res) => {
 
 app.post('/api/admin/events', requireAdmin, async (req, res) => {
     try {
-        let p = req.body; p.timeSlots = p.timeSlots ? p.timeSlots.split(',').map(s => s.trim()).filter(s => s) : ["12:00 PM"];
+        let p = req.body;
+        if (p.locations && Array.isArray(p.locations)) {
+            p.locations = p.locations.map(loc => {
+                if (typeof loc.timeSlots === 'string') loc.timeSlots = loc.timeSlots.split(',').map(s => s.trim()).filter(s => s);
+                if (!loc.timeSlots || loc.timeSlots.length === 0) loc.timeSlots = ["12:00 PM"];
+                return loc;
+            });
+        }
         await Event.create(p); clearEventsCache(); io.emit('eventUpdate'); io.emit('dashboardUpdate'); res.json({ success: true, message: "Created!" });
     } catch (err) { res.status(500).json({ success: false, message: "Error" }); }
 });
 
 app.put('/api/admin/events/:id', requireAdmin, async (req, res) => {
     try { 
-        let p = { ...req.body }; if (typeof p.timeSlots === 'string') p.timeSlots = p.timeSlots.split(',').map(s => s.trim()).filter(s => s);
+        let p = { ...req.body }; 
+        if (p.locations && Array.isArray(p.locations)) {
+            p.locations = p.locations.map(loc => {
+                if (typeof loc.timeSlots === 'string') loc.timeSlots = loc.timeSlots.split(',').map(s => s.trim()).filter(s => s);
+                if (!loc.timeSlots || loc.timeSlots.length === 0) loc.timeSlots = ["12:00 PM"];
+                return loc;
+            });
+        }
         await Event.findByIdAndUpdate(req.params.id, p); clearEventsCache(); io.emit('eventUpdate'); io.emit('dashboardUpdate'); res.json({ success: true, message: "Updated." }); 
     } catch (err) { res.status(500).json({ success: false, message: "Error" }); }
 });

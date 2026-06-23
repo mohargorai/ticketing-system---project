@@ -49,6 +49,10 @@ window.addEventListener('DOMContentLoaded', async () => {
     loadAnalytics();
     loadEvents();
     loadUsers();
+    
+    if (document.getElementById('venues-container')) {
+        createVenueBlock();
+    }
 
     // --- NEW FEATURES: Role Toggle & View Tickets ---
     let currentRoleToggleUserId = null;
@@ -359,12 +363,12 @@ async function loadEvents() {
         }
 
         container.innerHTML = events.map(e => {
-            const d = new Date(e.startDate);
+            const firstLoc = e.locations && e.locations.length > 0 ? e.locations[0] : null;
+            const d = firstLoc && firstLoc.startDate ? new Date(firstLoc.startDate) : new Date();
             const dateStr = d.toLocaleDateString('en-GB', {weekday: 'short', day: 'numeric', month: 'short', year: 'numeric'});
-            const timeStr = d.toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit'});
             
             const sold = e.ticketsSold || 0;
-            const capacity = e.capacity || 0; 
+            const capacity = e.locations ? e.locations.reduce((sum, l) => sum + l.capacity, 0) : 0; 
             const available = Math.max(0, capacity - sold);
             const percent = capacity > 0 ? Math.min(100, Math.round((sold / capacity) * 100)) : 0;
             
@@ -393,7 +397,8 @@ async function loadEvents() {
             
             let catBadge = e.category ? `<span class="badge ${catColor} ms-3 rounded-pill" style="font-size: 10px; padding: 4px 10px; letter-spacing: 0.5px;">${e.category}</span>` : '';
 
-            let slotsDisplay = e.timeSlots && e.timeSlots.length > 0 ? e.timeSlots.join(', ') : 'No slots';
+            let locationNames = e.locations && e.locations.length > 0 ? Array.from(new Set(e.locations.map(l => l.venueName))).join(', ') : 'No Locations';
+            let slotsDisplay = e.locations && e.locations.length > 0 ? `${e.locations.length} Venue(s)` : 'No slots';
 
             return `
             <div class="admin-event-row rounded mb-2">
@@ -405,8 +410,8 @@ async function loadEvents() {
                             <h6 class="fw-bold mb-0 text-white" style="font-size: 15px;">${e.title} ${ratingBadge} ${catBadge}</h6>
                             <span class="badge ${badgeClass} rounded-pill" style="font-size: 10px; padding: 4px 8px; letter-spacing: 0.5px;">${e.eventType}</span>
                         </div>
-                        <div class="text-muted mb-1" style="font-size: 13px;">${e.location}</div>
-                        <div class="text-muted" style="font-size: 13px;">${dateStr} | Slots: <span class="text-info">${slotsDisplay}</span></div>
+                        <div class="text-muted mb-1" style="font-size: 13px;">${locationNames}</div>
+                        <div class="text-muted" style="font-size: 13px;">${dateStr} | Info: <span class="text-info">${slotsDisplay}</span></div>
                     </div>
                 </div>
                 
@@ -500,26 +505,155 @@ document.getElementById('user-search-input')?.addEventListener('input', (e) => {
     renderUsers(filtered);
 });
 
+// DYNAMIC VENUES LOGIC
+let venueCount = 0;
+const venuesContainer = document.getElementById('venues-container');
+const addVenueBtn = document.getElementById('add-venue-btn');
+
+function createVenueBlock(data = null) {
+    const vId = `venue-${venueCount++}`;
+    const div = document.createElement('div');
+    div.className = 'venue-block p-3 border rounded mb-2 position-relative';
+    div.style.borderColor = 'var(--border-color)';
+    div.style.backgroundColor = 'rgba(255,255,255,0.02)';
+    div.id = vId;
+
+    div.innerHTML = `
+        <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2" onclick="document.getElementById('${vId}').remove()">X</button>
+        <div class="row g-2">
+            <div class="col-12 col-md-6">
+                <label class="form-label text-info small">Venue Search (OSM)</label>
+                <div class="input-group input-group-sm">
+                    <input type="text" class="form-control venue-search-input" placeholder="Search address...">
+                    <button class="btn btn-outline-info search-osm-btn" type="button">Search</button>
+                </div>
+                <ul class="list-group mt-1 osm-results" style="position: absolute; z-index: 1000; width: 95%; display:none;"></ul>
+            </div>
+            <div class="col-12 col-md-3">
+                <label class="form-label text-info small">Selected City</label>
+                <input type="text" class="form-control form-control-sm venue-city" required value="${data?.city || ''}">
+            </div>
+            <div class="col-12 col-md-3">
+                <label class="form-label text-info small">Venue Name</label>
+                <input type="text" class="form-control form-control-sm venue-name" required value="${data?.venueName || ''}">
+            </div>
+            
+            <input type="hidden" class="venue-lat" value="${data?.lat || ''}">
+            <input type="hidden" class="venue-lon" value="${data?.lon || ''}">
+
+            <div class="col-6 col-md-3">
+                <label class="form-label text-success small">Capacity (per slot)</label>
+                <input type="number" class="form-control form-control-sm venue-capacity" required value="${data?.capacity || ''}">
+            </div>
+            <div class="col-6 col-md-3">
+                <label class="form-label text-success small">Price (₹)</label>
+                <input type="number" step="0.01" class="form-control form-control-sm venue-price" required value="${data?.price || 0}">
+            </div>
+            <div class="col-6 col-md-3">
+                <label class="form-label small">Start Date & Time</label>
+                <input type="datetime-local" class="form-control form-control-sm venue-start" required value="${data?.startDate ? formatForDateTimeLocal(data.startDate) : ''}">
+            </div>
+            <div class="col-6 col-md-3">
+                <label class="form-label small">End Date & Time</label>
+                <input type="datetime-local" class="form-control form-control-sm venue-end" required value="${data?.endDate ? formatForDateTimeLocal(data.endDate) : ''}">
+            </div>
+            <div class="col-12">
+                <label class="form-label text-primary small">Time Slots (Comma separated)</label>
+                <input type="text" class="form-control form-control-sm venue-timeslots" placeholder="e.g. 09:40 AM, 12:50 PM" required value="${data?.timeSlots ? data.timeSlots.join(', ') : ''}">
+            </div>
+        </div>
+    `;
+
+    venuesContainer.appendChild(div);
+
+    // Bind OSM Search
+    const searchBtn = div.querySelector('.search-osm-btn');
+    const searchInput = div.querySelector('.venue-search-input');
+    const resultsUl = div.querySelector('.osm-results');
+    const cityInput = div.querySelector('.venue-city');
+    const nameInput = div.querySelector('.venue-name');
+    const latInput = div.querySelector('.venue-lat');
+    const lonInput = div.querySelector('.venue-lon');
+
+    searchBtn.addEventListener('click', async () => {
+        const query = searchInput.value.trim();
+        if(!query) return;
+        searchBtn.innerHTML = '...';
+        try {
+            const res = await fetch(\`https://nominatim.openstreetmap.org/search?format=json&q=\${encodeURIComponent(query)}&addressdetails=1\`);
+            const results = await res.json();
+            resultsUl.innerHTML = '';
+            if(results.length === 0) {
+                resultsUl.innerHTML = '<li class="list-group-item bg-dark text-muted">No results found</li>';
+            } else {
+                results.slice(0, 5).forEach(r => {
+                    const li = document.createElement('li');
+                    li.className = 'list-group-item list-group-item-action bg-dark text-white';
+                    li.style.cursor = 'pointer';
+                    li.innerText = r.display_name;
+                    li.onclick = () => {
+                        nameInput.value = r.name || r.display_name.split(',')[0];
+                        cityInput.value = r.address?.city || r.address?.town || r.address?.village || r.address?.county || '';
+                        latInput.value = r.lat;
+                        lonInput.value = r.lon;
+                        resultsUl.style.display = 'none';
+                        searchInput.value = r.display_name;
+                    };
+                    resultsUl.appendChild(li);
+                });
+            }
+            resultsUl.style.display = 'block';
+        } catch(e) {
+            console.error(e);
+        }
+        searchBtn.innerHTML = 'Search';
+    });
+
+    // close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if(!div.contains(e.target)) resultsUl.style.display = 'none';
+    });
+}
+
+if(addVenueBtn) {
+    addVenueBtn.addEventListener('click', () => createVenueBlock());
+}
+
 eventForm.addEventListener('submit', async (e) => {
     e.preventDefault(); 
 
     const eventId = eventIdInput.value;
     const isEditing = !!eventId; 
 
-    const startInput = document.getElementById('event-start').value;
-    const endInput = document.getElementById('event-end').value;
+    // Gather dynamic locations
+    const locations = [];
+    document.querySelectorAll('.venue-block').forEach(div => {
+        const startInput = div.querySelector('.venue-start').value;
+        const endInput = div.querySelector('.venue-end').value;
+        locations.push({
+            venueName: div.querySelector('.venue-name').value,
+            city: div.querySelector('.venue-city').value,
+            lat: div.querySelector('.venue-lat').value ? Number(div.querySelector('.venue-lat').value) : null,
+            lon: div.querySelector('.venue-lon').value ? Number(div.querySelector('.venue-lon').value) : null,
+            capacity: parseInt(div.querySelector('.venue-capacity').value),
+            price: Number(div.querySelector('.venue-price').value),
+            startDate: startInput ? new Date(startInput).toISOString() : null,
+            endDate: endInput ? new Date(endInput).toISOString() : null,
+            timeSlots: div.querySelector('.venue-timeslots').value.split(',').map(s => s.trim())
+        });
+    });
+
+    if(locations.length === 0) {
+        alert("Please add at least one venue!");
+        return;
+    }
 
     const payload = {
         title: document.getElementById('event-title').value,
         ageLimit: parseInt(document.getElementById('event-age').value), 
         eventType: document.getElementById('event-type').value,
         category: document.getElementById('event-category').value, 
-        capacity: parseInt(document.getElementById('event-capacity').value),
-        price: Number(document.getElementById('event-price').value),
-        startDate: startInput ? new Date(startInput).toISOString() : null,
-        endDate: endInput ? new Date(endInput).toISOString() : null,
-        location: document.getElementById('event-location').value,
-        timeSlots: document.getElementById('event-timeslots').value, 
+        locations: locations,
         description: document.getElementById('event-description').value,
         imageUrl: document.getElementById('event-image').value
     };
@@ -569,24 +703,23 @@ window.editEvent = function(eventData) {
     document.getElementById('event-age').value = eventData.ageLimit || 0;
     document.getElementById('event-type').value = eventData.eventType;
     document.getElementById('event-category').value = eventData.category || 'Movie'; 
-    document.getElementById('event-capacity').value = eventData.capacity;
-    document.getElementById('event-price').value = eventData.price || 0;
-    document.getElementById('event-location').value = eventData.location;
-    document.getElementById('event-timeslots').value = eventData.timeSlots && eventData.timeSlots.length > 0 ? eventData.timeSlots.join(', ') : '';
     document.getElementById('event-description').value = eventData.description || '';
     document.getElementById('event-image').value = eventData.imageUrl || ''; 
     document.getElementById('event-poster-file').value = ''; 
 
-    document.getElementById('event-start').value = formatForDateTimeLocal(eventData.startDate);
-    document.getElementById('event-end').value = formatForDateTimeLocal(eventData.endDate);
+    venuesContainer.innerHTML = '';
+    if (eventData.locations && eventData.locations.length > 0) {
+        eventData.locations.forEach(loc => createVenueBlock(loc));
+    } else {
+        createVenueBlock(); // Fallback
+    }
 
-    formTitle.innerText = "✏️ Edit Event";
-    submitBtn.innerText = "Update Event";
+    formTitle.innerHTML = '✏️ Edit Event';
+    submitBtn.innerText = 'Save Changes';
     submitBtn.classList.replace('btn-success', 'btn-warning');
     cancelBtn.classList.remove('d-none');
     
     document.getElementById('event-type').disabled = false;
-    document.getElementById('event-capacity').min = 1;
 
     eventForm.scrollIntoView({ behavior: 'smooth' });
 }
@@ -600,16 +733,13 @@ function formatForDateTimeLocal(isoString) {
 window.resetEventForm = function() {
     eventForm.reset();
     eventIdInput.value = '';
-    
-    document.getElementById('event-image').value = ''; 
-    document.getElementById('event-poster-file').value = ''; 
-    document.getElementById('event-category').value = 'Movie'; 
-    document.getElementById('event-timeslots').value = ''; 
-    
-    formTitle.innerText = "Create New Event";
-    submitBtn.innerText = "Save Event";
+    document.getElementById('event-image').value = '';
+    formTitle.innerHTML = '✨ Create New Event';
+    submitBtn.innerText = 'Publish Event';
     submitBtn.classList.replace('btn-warning', 'btn-success');
     cancelBtn.classList.add('d-none');
+    venuesContainer.innerHTML = '';
+    createVenueBlock();
 }
 
 window.deleteUser = async function(id) {

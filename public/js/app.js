@@ -572,42 +572,12 @@ function displayEvents(events) {
     }
 
     const now = new Date();
-    const groupedEvents = [];
-    const movieGroups = new Map();
+    window.currentEvents = events;
 
-    events.forEach(ev => {
-        if (ev.category === 'Movie') {
-            const normalizedTitle = ev.title.trim().toLowerCase();
-            if (!movieGroups.has(normalizedTitle)) {
-                movieGroups.set(normalizedTitle, {
-                    isGroup: true,
-                    title: ev.title, 
-                    category: ev.category,
-                    eventType: ev.eventType,
-                    imageUrl: ev.imageUrl,
-                    price: ev.price,
-                    description: ev.description,
-                    location: ev.location,
-                    subEvents: [ev]
-                });
-                groupedEvents.push(movieGroups.get(normalizedTitle));
-            } else {
-                movieGroups.get(normalizedTitle).subEvents.push(ev);
-            }
-        } else {
-            groupedEvents.push(ev);
-        }
-    });
-
-    window.currentMovieGroups = movieGroups;
-
-    container.innerHTML = groupedEvents.map(e => {
-        let isExpired = false;
-        if(e.isGroup) {
-            isExpired = e.subEvents.every(sub => now > new Date(sub.endDate));
-        } else {
-            isExpired = now > new Date(e.endDate);
-        }
+    container.innerHTML = events.map(e => {
+        const isExpired = e.locations && e.locations.length > 0 
+            ? e.locations.every(l => now > new Date(l.endDate)) 
+            : true;
         
         const btnState = isExpired ? 'btn-secondary disabled' : 'btn-danger';
         const btnText = isExpired ? 'Ended' : 'Book Now';
@@ -617,15 +587,13 @@ function displayEvents(events) {
         let typeIcon = e.eventType === 'Seated' ? '💺' : '🎫';
         let catBadge = e.category ? `<span class="badge bg-dark border border-secondary text-light">${e.category}</span>` : '';
 
-        const displayPrice = Number(e.price || 0).toFixed(2);
+        const minPrice = e.locations && e.locations.length > 0 
+            ? Math.min(...e.locations.map(l => l.price)) 
+            : 0;
+        const displayPrice = Number(minPrice).toFixed(2);
         
-        let dataAttrs = `data-title="${e.title}"`;
-        let groupClass = '';
-        if(e.isGroup) {
-            groupClass = 'grouped-movie-card';
-        } else {
-            dataAttrs += ` data-id="${e._id}" data-age="${e.ageLimit || 0}" data-type="${e.eventType}" data-price="${e.price || 0}"`;
-        }
+        let dataAttrs = `data-id="${e._id}"`;
+        let groupClass = (e.locations && e.locations.length > 1) ? 'grouped-movie-card' : '';
 
         return `
         <div class="col-md-4">
@@ -635,7 +603,7 @@ function displayEvents(events) {
                     <h5 class="fw-bold mb-1 text-white">${e.title}</h5>
                     <p class="text-muted small mb-3" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 40px;">${e.description || 'Experience the ultimate event.'}</p>
                     <div class="d-flex gap-2 mb-3"><span class="badge bg-dark border border-secondary ${typeColor}">${typeIcon} ${e.eventType}</span>${catBadge}</div>
-                    <p class="small text-muted mb-3">📍 ${e.location || 'Venue TBA'}</p>
+                    <p class="small text-muted mb-3">📍 ${e.locations && e.locations.length > 0 ? (e.locations.length === 1 ? e.locations[0].venueName : `${e.locations.length} Locations Available`) : 'Venue TBA'}</p>
                     <div class="d-flex justify-content-between align-items-end mt-auto pt-3 border-top" style="border-color: #262626 !important;">
                         <div><span class="text-muted d-block" style="font-size:11px;">Starting from</span><span class="fw-bold fs-5 text-white">₹${displayPrice}</span></div>
                         <button class="btn ${btnState} fw-bold px-4 rounded-3 book-now-btn">${btnText}</button>
@@ -646,13 +614,12 @@ function displayEvents(events) {
     }).join('');
 }
 
-function showCinemaSelection(title) {
-    const normalizedTitle = title.trim().toLowerCase();
-    const group = window.currentMovieGroups?.get(normalizedTitle);
-    if (!group) return;
+function showCinemaSelection(eventId) {
+    const event = window.currentEvents?.find(e => e._id === eventId);
+    if (!event || !event.locations) return;
     
     const titleEl = document.getElementById('selected-event-title');
-    if(titleEl) titleEl.innerText = group.title; 
+    if(titleEl) titleEl.innerText = event.title; 
     
     switchView('action-section');
     document.getElementById('seated-view')?.classList.add('d-none');
@@ -664,27 +631,30 @@ function showCinemaSelection(title) {
     if(cinemaContainer) cinemaContainer.classList.remove('d-none');
     
     if(cinemaPills) {
-        cinemaPills.innerHTML = group.subEvents.map(ev => {
-            const loc = ev.location || 'Unknown Location';
+        cinemaPills.innerHTML = event.locations.map(loc => {
+            const locName = loc.venueName || 'Unknown Location';
+            const locCity = loc.city || '';
+            const gmapsLink = (loc.lat && loc.lon) ? `<a href="https://www.google.com/maps/dir/?api=1&destination=${loc.lat},${loc.lon}" target="_blank" class="btn btn-sm btn-outline-info ms-2" onclick="event.stopPropagation();">🧭 Directions</a>` : '';
             return `
-            <div class="card cinema-hall-card border-secondary p-3 mb-2" style="cursor: pointer; background: rgba(255,255,255,0.03); border-radius: 16px; transition: all 0.3s var(--ease-smooth); backdrop-filter: blur(10px);" data-id="${ev._id}" onmouseover="this.style.background='rgba(255,255,255,0.08)'; this.style.borderColor='var(--brand-primary)';" onmouseout="this.style.background='rgba(255,255,255,0.03)'; this.style.borderColor='var(--border-color)';">
+            <div class="card cinema-hall-card border-secondary p-3 mb-2" style="cursor: pointer; background: rgba(255,255,255,0.03); border-radius: 16px; transition: all 0.3s var(--ease-smooth); backdrop-filter: blur(10px);" data-loc-id="${loc._id}" onmouseover="this.style.background='rgba(255,255,255,0.08)'; this.style.borderColor='var(--brand-primary)';" onmouseout="this.style.background='rgba(255,255,255,0.03)'; this.style.borderColor='var(--border-color)';">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="text-white fw-bold mb-1" style="font-size: 15px;">${loc}</h6>
+                        <h6 class="text-white fw-bold mb-1" style="font-size: 15px;">${locName} ${locCity ? `(${locCity})` : ''}</h6>
                         <span class="text-muted small">Select to view showtimes</span>
+                        ${gmapsLink}
                     </div>
-                    <span class="fs-4" style="filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));">🍿</span>
+                    <span class="fs-4" style="filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));">📍</span>
                 </div>
             </div>`;
         }).join('');
         
         document.querySelectorAll('.cinema-hall-card').forEach(cCard => {
             cCard.addEventListener('click', (ev) => {
-                const selectedId = ev.currentTarget.getAttribute('data-id');
-                const selectedEvent = group.subEvents.find(e => e._id === selectedId);
-                if (selectedEvent) {
+                const locId = ev.currentTarget.getAttribute('data-loc-id');
+                const location = event.locations.find(l => l._id === locId);
+                if (location) {
                     cinemaContainer.classList.add('d-none');
-                    triggerStandardEventSelection(selectedEvent);
+                    triggerStandardEventSelection(event, location);
                 }
             });
         });
@@ -695,27 +665,23 @@ safeBind('events-container', 'click', async (e) => {
     const card = e.target.closest('.event-card');
     if (!card || card.classList.contains('expired-card')) return;
         
+    const eventId = card.getAttribute('data-id');
+    const event = window.currentEvents?.find(ev => ev._id === eventId);
+    if (!event) return;
+
     if (card.classList.contains('grouped-movie-card')) {
-        const title = card.getAttribute('data-title');
-        showCinemaSelection(title);
+        showCinemaSelection(eventId);
         return;
     }
     
-    const eventData = {
-        _id: card.getAttribute('data-id'),
-        title: card.getAttribute('data-title'),
-        ageLimit: card.getAttribute('data-age'),
-        eventType: card.getAttribute('data-type'),
-        price: card.getAttribute('data-price')
-    };
-    
-    triggerStandardEventSelection(eventData);
+    triggerStandardEventSelection(event, event.locations[0]);
 });
 
-async function triggerStandardEventSelection(eventData) {
+async function triggerStandardEventSelection(eventData, locationData) {
     const requiredAge = parseInt(eventData.ageLimit || 0);
     currentEventType = eventData.eventType;
-    currentEventPrice = parseFloat(eventData.price || 0); 
+    currentEventPrice = parseFloat(locationData.price || 0); 
+    currentLocationId = locationData._id;
 
     if (requiredAge > 0) {
         const res = await fetch(`/api/profile?t=${new Date().getTime()}`);
@@ -731,7 +697,7 @@ async function triggerStandardEventSelection(eventData) {
 
     currentEventId = eventData._id;
     const titleEl = document.getElementById('selected-event-title');
-    if(titleEl) titleEl.innerText = eventData.title; 
+    if(titleEl) titleEl.innerText = `${eventData.title} @ ${locationData.venueName}`; 
     
     switchView('action-section');
     document.getElementById('seated-view')?.classList.add('d-none');
@@ -796,7 +762,7 @@ async function fetchAndRenderTimeSlots(dateStr) {
     timeContainer.innerHTML = '<span class="text-muted small">Loading showtimes...</span>';
     
     try {
-        const res = await fetch(`/api/events/${currentEventId}/timeslots-availability?date=${dateStr}&t=${new Date().getTime()}`);
+        const res = await fetch(`/api/events/${currentEventId}/timeslots-availability?date=${dateStr}&locationId=${currentLocationId}&t=${new Date().getTime()}`);
         const slotsData = await res.json();
         
         if (slotsData.length === 0) {
@@ -836,7 +802,7 @@ async function fetchAndRenderTimeSlots(dateStr) {
 
 async function loadEventDataForDateAndTime(date, time, isSoftUpdate = false) {
     try {
-        const res = await fetch(`/api/events/${currentEventId}/availability?date=${date}&timeSlot=${time}&t=${new Date().getTime()}`);
+        const res = await fetch(`/api/events/${currentEventId}/availability?date=${date}&timeSlot=${time}&locationId=${currentLocationId}&t=${new Date().getTime()}`);
         const data = await res.json();
         
         const gView = document.getElementById('general-view');
@@ -845,7 +811,7 @@ async function loadEventDataForDateAndTime(date, time, isSoftUpdate = false) {
         if (currentEventType === 'Seated') {
             if(gView) gView.classList.add('d-none'); 
             if(sView) sView.classList.remove('d-none');
-            await renderSeatsForEvent(currentEventId, date, time, isSoftUpdate);
+            await renderSeatsForEvent(currentEventId, currentLocationId, date, time, isSoftUpdate);
         } else {
             if(sView) sView.classList.add('d-none'); 
             if(gView) gView.classList.remove('d-none');
@@ -864,7 +830,7 @@ async function loadEventDataForDateAndTime(date, time, isSoftUpdate = false) {
     } catch (err) { console.error("Data error."); }
 }
 
-async function renderSeatsForEvent(eventId, date, time, isSoftUpdate = false) {
+async function renderSeatsForEvent(eventId, locationId, date, time, isSoftUpdate = false) {
     const seatMapEl = document.getElementById('seat-map');
     if(!seatMapEl) return;
 
@@ -872,7 +838,7 @@ async function renderSeatsForEvent(eventId, date, time, isSoftUpdate = false) {
         if (!isSoftUpdate) {
             seatMapEl.innerHTML = '<p class="text-muted text-center mt-3">Loading layout...</p>';
         }
-        const res = await fetch(`/api/seats/${eventId}?date=${date}&timeSlot=${time}&t=${new Date().getTime()}`);
+        const res = await fetch(`/api/seats/${eventId}?locationId=${locationId}&date=${date}&timeSlot=${time}&t=${new Date().getTime()}`);
         let seats = await res.json();
         
         if (isSoftUpdate) {
@@ -1034,7 +1000,7 @@ safeBind('seat-map', 'click', async (e) => {
                 const res = await fetch('/api/seats/lock', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ eventId: currentEventId, seatId, date: currentSelectedDate, timeSlot: currentSelectedTime })
+                    body: JSON.stringify({ eventId: currentEventId, locationId: currentLocationId, seatId, date: currentSelectedDate, timeSlot: currentSelectedTime })
                 });
                 const data = await res.json();
                 if (!data.success) {
@@ -1058,7 +1024,7 @@ safeBind('seat-map', 'click', async (e) => {
                 const res = await fetch('/api/seats/unlock', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ eventId: currentEventId, seatId, date: currentSelectedDate, timeSlot: currentSelectedTime })
+                    body: JSON.stringify({ eventId: currentEventId, locationId: currentLocationId, seatId, date: currentSelectedDate, timeSlot: currentSelectedTime })
                 });
                 const data = await res.json();
                 if (!data.success) {
@@ -1090,7 +1056,7 @@ safeBind('unselect-all-btn', 'click', async (e) => {
         return fetch('/api/seats/unlock', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ eventId: currentEventId, seatId, date: currentSelectedDate, timeSlot: currentSelectedTime })
+            body: JSON.stringify({ eventId: currentEventId, locationId: currentLocationId, seatId, date: currentSelectedDate, timeSlot: currentSelectedTime })
         });
     });
 
@@ -1125,10 +1091,10 @@ safeBind('sidebar-checkout-btn', 'click', () => {
             return;
         }    
             
-        pendingPaymentData = { type: 'seated', eventId: currentEventId, seats: selectedSeats, selectedDate: currentSelectedDate, timeSlot: currentSelectedTime };
+        pendingPaymentData = { type: 'seated', eventId: currentEventId, locationId: currentLocationId, seats: selectedSeats, selectedDate: currentSelectedDate, timeSlot: currentSelectedTime };
     } else {
         const qty = parseInt(document.getElementById('general-qty').value);
-        pendingPaymentData = { type: 'general', eventId: currentEventId, qty: qty, selectedDate: currentSelectedDate, timeSlot: currentSelectedTime };
+        pendingPaymentData = { type: 'general', eventId: currentEventId, locationId: currentLocationId, qty: qty, selectedDate: currentSelectedDate, timeSlot: currentSelectedTime };
     }
 
     // 🚨 FIXED: Added toFixed(2) to secure checkout display pop up
@@ -1195,7 +1161,7 @@ safeBind('nav-bookings-link', 'click', async (e) => {
         }
 
         const grouped = tickets.reduce((acc, t) => {
-            const key = `${t.eventId}-${t.bookingDate}-${t.timeSlot}`;
+            const key = `${t.eventId}-${t.locationId}-${t.bookingDate}-${t.timeSlot}`;
             if(!acc[key]) { 
                 const hash = Math.abs(key.split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0)).toString(16).toUpperCase().substring(0, 8);
                 
@@ -1215,7 +1181,7 @@ safeBind('nav-bookings-link', 'click', async (e) => {
             }
             acc[key].count++; 
             acc[key].seats.push(t.seatId); 
-            acc[key].ids.push({ eventId: t.eventId, seatId: t.seatId, bookingDate: t.bookingDate, timeSlot: t.timeSlot }); 
+            acc[key].ids.push({ eventId: t.eventId, locationId: t.locationId, seatId: t.seatId, bookingDate: t.bookingDate, timeSlot: t.timeSlot }); 
             return acc;
         }, {});
 

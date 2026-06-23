@@ -145,36 +145,20 @@
                                 <option value="General">General Admission</option>
                             </select>
                         </div>
-                        <div class="col-6 col-md-4 mt-3 mt-md-4">
-                            <label class="form-label text-info">Capacity (per slot)</label>
-                            <input type="number" id="event-capacity" class="form-control" placeholder="e.g. 150" min="1" required>
-                        </div>
-                        <div class="col-6 col-md-4 mt-3 mt-md-4">
-                            <label class="form-label text-success">Price (₹)</label>
-                            <input type="number" id="event-price" class="form-control" min="0" step="0.01" value="0" required>
-                        </div>
-                        
-                        <div class="col-12 col-md-4 mt-3 mt-md-4">
-                            <label class="form-label">Start Date & Time</label>
-                            <input type="datetime-local" id="event-start" class="form-control" required>
-                        </div>
-                        <div class="col-12 col-md-4 mt-3 mt-md-4">
-                            <label class="form-label">End Date & Time</label>
-                            <input type="datetime-local" id="event-end" class="form-control" required>
-                        </div>
-                        <div class="col-12 col-md-4 mt-3 mt-md-4">
-                            <label class="form-label">Location / Venue</label>
-                            <input type="text" id="event-location" class="form-control" placeholder="e.g. location name" required>
-                        </div>
-
-                        <div class="col-12 mt-3 mt-md-4">
-                            <label class="form-label text-primary">Time Slots (Comma separated)</label>
-                            <input type="text" id="event-timeslots" class="form-control border-primary" placeholder="e.g. 09:40 AM, 12:50 PM, 06:30 PM" required>
-                        </div>
-                        
                         <div class="col-12 mt-3 mt-md-4">
                             <label class="form-label">Event Description</label>
                             <textarea id="event-description" class="form-control" rows="3" placeholder="Describe the event..."></textarea>
+                        </div>
+                        
+                        <!-- DYNAMIC VENUES SECTION -->
+                        <div class="col-12 mt-4 pt-3 border-top" style="border-color: var(--border-color) !important;">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="text-info fw-bold mb-0">📍 Event Venues / Locations</h6>
+                                <button type="button" class="btn btn-sm btn-outline-info" id="add-venue-btn">+ Add Venue</button>
+                            </div>
+                            <div id="venues-container" class="d-flex flex-column gap-3">
+                                <!-- Venue blocks will be injected here by admin.js -->
+                            </div>
                         </div>
                     </div>
                     
