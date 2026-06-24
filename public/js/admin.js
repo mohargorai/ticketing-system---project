@@ -201,11 +201,10 @@ document.getElementById('event-poster-file').addEventListener('change', function
 
             const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
             document.getElementById('event-image').value = compressedBase64;
-            
-            const preview = document.getElementById('event-poster-preview');
-            if (preview) {
-                preview.src = compressedBase64;
-                preview.classList.remove('d-none');
+            const previewImg = document.getElementById('event-poster-preview');
+            if (previewImg) {
+                previewImg.src = compressedBase64;
+                previewImg.classList.remove('d-none');
             }
         };
         img.src = event.target.result;
@@ -586,7 +585,7 @@ function createVenueBlock(data = null) {
             </div>
             <div class="col-6 col-md-3">
                 <label class="form-label text-success small">Price (₹)</label>
-                <input type="number" step="0.01" class="form-control form-control-sm venue-price" required value="${data?.price || 0}">
+                <input type="number" step="0.01" class="form-control form-control-sm venue-price" required value="${data?.price !== undefined ? data.price : ''}" placeholder="Price (₹)">
             </div>
             <div class="col-6 col-md-3">
                 <label class="form-label small">Start Date & Time</label>
@@ -760,15 +759,14 @@ window.editEvent = function(eventData) {
     document.getElementById('event-description').value = eventData.description || '';
     document.getElementById('event-image').value = eventData.imageUrl || ''; 
     document.getElementById('event-poster-file').value = ''; 
-    
-    const preview = document.getElementById('event-poster-preview');
-    if (preview) {
+    const previewImg = document.getElementById('event-poster-preview');
+    if (previewImg) {
         if (eventData.imageUrl) {
-            preview.src = eventData.imageUrl;
-            preview.classList.remove('d-none');
+            previewImg.src = eventData.imageUrl;
+            previewImg.classList.remove('d-none');
         } else {
-            preview.src = '';
-            preview.classList.add('d-none');
+            previewImg.src = '';
+            previewImg.classList.add('d-none');
         }
     }
 
@@ -799,13 +797,11 @@ window.resetEventForm = function() {
     eventForm.reset();
     eventIdInput.value = '';
     document.getElementById('event-image').value = '';
-    
-    const preview = document.getElementById('event-poster-preview');
-    if (preview) {
-        preview.src = '';
-        preview.classList.add('d-none');
+    const previewImg = document.getElementById('event-poster-preview');
+    if (previewImg) {
+        previewImg.src = '';
+        previewImg.classList.add('d-none');
     }
-    
     document.getElementById('event-cbfcRating').value = 'U';
     document.getElementById('event-screentime').value = '';
     
