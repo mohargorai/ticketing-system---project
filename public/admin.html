@@ -136,8 +136,12 @@
                         </div>
                         
                         <div class="col-12 col-md-8 mt-3 mt-md-4">
-                            <label class="form-label text-info">Genre (Hold Ctrl/Cmd to select multiple)</label>
-                            <select id="event-genre" class="form-select" multiple required style="height: 120px;">
+                            <label class="form-label text-info">Genre</label>
+                            <div class="d-flex gap-2 mb-2" id="selected-genres-container">
+                                <!-- Selected genre pills will appear here -->
+                            </div>
+                            <select id="event-genre-select" class="form-select">
+                                <option value="" selected disabled>Select a genre to add...</option>
                                 <option value="Action">Action</option>
                                 <option value="Comedy">Comedy</option>
                                 <option value="Drama">Drama</option>

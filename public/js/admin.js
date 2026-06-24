@@ -36,6 +36,25 @@ window.alert = function(msg) {
     modalEl.addEventListener('hidden.bs.modal', () => { modalEl.remove(); });
 };
 
+// ==========================================
+// 🏷️ GENRE PILLS MANAGEMENT
+// ==========================================
+window.selectedGenresList = [];
+window.renderGenrePills = function() {
+    const container = document.getElementById('selected-genres-container');
+    if (!container) return;
+    container.innerHTML = window.selectedGenresList.map(g => `
+        <span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-25 d-flex align-items-center gap-2 py-2 px-3">
+            ${g}
+            <button type="button" class="btn-close btn-close-white" style="font-size: 8px; filter: invert(1) grayscale(100%) brightness(200%);" onclick="removeGenre('${g}')"></button>
+        </span>
+    `).join('');
+};
+window.removeGenre = function(g) {
+    window.selectedGenresList = window.selectedGenresList.filter(genre => genre !== g);
+    renderGenrePills();
+};
+
 window.addEventListener('DOMContentLoaded', async () => {
     const res = await fetch(`/api/check-session?t=${Date.now()}`);
     const data = await res.json();
@@ -49,6 +68,19 @@ window.addEventListener('DOMContentLoaded', async () => {
     loadAnalytics();
     loadEvents();
     loadUsers();
+    
+    // Custom Genre Picker Logic
+    const genreSelect = document.getElementById('event-genre-select');
+    if (genreSelect) {
+        genreSelect.addEventListener('change', (e) => {
+            const val = e.target.value;
+            if (val && !window.selectedGenresList.includes(val)) {
+                window.selectedGenresList.push(val);
+                renderGenrePills();
+            }
+            e.target.value = ''; // Reset dropdown
+        });
+    }
     
     if (document.getElementById('venues-container')) {
         createVenueBlock();
@@ -652,13 +684,15 @@ eventForm.addEventListener('submit', async (e) => {
         return;
     }
 
-    const genreSelect = document.getElementById('event-genre');
-    const selectedGenres = Array.from(genreSelect.selectedOptions).map(opt => opt.value);
+    if(locations.length === 0) {
+        alert("Please add at least one venue!");
+        return;
+    }
 
     const payload = {
         title: document.getElementById('event-title').value,
         cbfcRating: document.getElementById('event-cbfcRating').value, 
-        genre: selectedGenres,
+        genre: window.selectedGenresList,
         screenTime: document.getElementById('event-screentime').value,
         eventType: document.getElementById('event-type').value,
         category: document.getElementById('event-category').value, 
@@ -711,10 +745,8 @@ window.editEvent = function(eventData) {
     document.getElementById('event-title').value = eventData.title;
     document.getElementById('event-cbfcRating').value = eventData.cbfcRating || 'U';
     
-    const genreSelect = document.getElementById('event-genre');
-    Array.from(genreSelect.options).forEach(opt => {
-        opt.selected = eventData.genre && eventData.genre.includes(opt.value);
-    });
+    window.selectedGenresList = eventData.genre || [];
+    renderGenrePills();
 
     document.getElementById('event-screentime').value = eventData.screenTime || '';
     document.getElementById('event-type').value = eventData.eventType;
@@ -752,8 +784,9 @@ window.resetEventForm = function() {
     document.getElementById('event-image').value = '';
     document.getElementById('event-cbfcRating').value = 'U';
     document.getElementById('event-screentime').value = '';
-    const genreSelect = document.getElementById('event-genre');
-    Array.from(genreSelect.options).forEach(opt => opt.selected = false);
+    
+    window.selectedGenresList = [];
+    renderGenrePills();
     
     formTitle.innerHTML = '✨ Create New Event';
     submitBtn.innerText = 'Publish Event';
