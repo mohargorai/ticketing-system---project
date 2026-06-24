@@ -209,7 +209,7 @@ option { background-color: #18181b !important; color: white !important; }
     border-color: var(--brand-primary); 
     box-shadow: 0 20px 40px -10px var(--brand-glow);
 }
-.event-card-img { width: 100%; height: auto; aspect-ratio: 16/9; object-fit: cover; opacity: 0.9; transition: opacity 0.4s; background: rgba(0,0,0,0.5); }
+.event-card-img { width: 100%; height: auto; aspect-ratio: 2/3; object-fit: cover; opacity: 0.9; transition: opacity 0.4s; background: rgba(0,0,0,0.5); }
 .event-card:hover .event-card-img { opacity: 1; transform: scale(1.05); }
 
 /* ==========================================
