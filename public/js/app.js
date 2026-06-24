@@ -641,7 +641,7 @@ function showCinemaSelection(eventId) {
             ? Math.min(...event.locations.map(l => l.price)) 
             : 0;
         const displayPrice = Number(minPrice).toFixed(2);
-        const priceHtml = `<div class="mt-3"><span id="details-bar-price-label" class="text-muted" style="font-size:12px;">Starting from</span><span id="details-bar-price-value" class="fw-bold fs-5 text-brand ms-2">₹${displayPrice}</span></div>`;
+        const priceHtml = `<div class="mt-3 d-none" id="details-bar-price-container"><span id="details-bar-price-label" class="text-muted" style="font-size:12px;">Starting from</span><span id="details-bar-price-value" class="fw-bold fs-5 text-brand ms-2">₹${displayPrice}</span></div>`;
 
         detailsBar.innerHTML = `
             <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
@@ -758,6 +758,8 @@ async function triggerStandardEventSelection(eventData, locationData) {
     if(priceLabelEl) priceLabelEl.innerText = "Price";
     const priceValueEl = document.getElementById('details-bar-price-value');
     if(priceValueEl) priceValueEl.innerText = `₹${parseFloat(locationData.price || 0).toFixed(2)}`;
+    const priceContainerEl = document.getElementById('details-bar-price-container');
+    if(priceContainerEl) priceContainerEl.classList.remove('d-none');
     
     switchView('action-section');
     document.getElementById('seated-view')?.classList.add('d-none');
