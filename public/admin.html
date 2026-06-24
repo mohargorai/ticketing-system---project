@@ -121,13 +121,33 @@
                         
                         <div class="col-6 col-md-4">
                             <label class="form-label text-danger">CBFC Rating</label>
-                            <select id="event-age" class="form-select" required>
-                                <option value="0">U (All Ages)</option>
-                                <option value="7">UA 7+</option>
-                                <option value="13">UA 13+</option>
-                                <option value="16">UA 16+</option>
-                                <option value="18">A (18+)</option>
-                                <option value="99">S (Special)</option>
+                            <select id="event-cbfcRating" class="form-select" required>
+                                <option value="U">U</option>
+                                <option value="U/A 7+">U/A 7+</option>
+                                <option value="U/A 13+">U/A 13+</option>
+                                <option value="U/A 16+">U/A 16+</option>
+                                <option value="A">A</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12 col-md-4 mt-3 mt-md-4">
+                            <label class="form-label text-warning">Screen Time</label>
+                            <input type="text" id="event-screentime" class="form-control" placeholder="e.g. 2h 15m" required>
+                        </div>
+                        
+                        <div class="col-12 col-md-8 mt-3 mt-md-4">
+                            <label class="form-label text-info">Genre (Hold Ctrl/Cmd to select multiple)</label>
+                            <select id="event-genre" class="form-select" multiple required style="height: 120px;">
+                                <option value="Action">Action</option>
+                                <option value="Comedy">Comedy</option>
+                                <option value="Drama">Drama</option>
+                                <option value="Thriller">Thriller</option>
+                                <option value="Horror">Horror</option>
+                                <option value="Romance">Romance</option>
+                                <option value="Sci-Fi">Sci-Fi</option>
+                                <option value="Family">Family</option>
+                                <option value="Animation">Animation</option>
+                                <option value="Adventure">Adventure</option>
                             </select>
                         </div>
 

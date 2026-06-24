@@ -609,9 +609,9 @@ function displayEvents(events) {
                 <div class="position-relative">${imgHtml}</div>
                 <div class="card-body d-flex flex-column p-3 flex-grow-1 gap-1">
                     <h6 class="fw-bold mb-0 text-white text-truncate" title="${e.title}">${e.title}</h6>
-                    <div class="d-flex flex-wrap gap-2 mt-2">
-                        <span class="badge bg-dark border border-secondary ${typeColor}">${typeIcon} ${e.eventType}</span>
-                        ${catBadge}
+                    <div class="d-flex align-items-center flex-wrap gap-2 mt-1">
+                        ${e.cbfcRating ? `<span class="badge bg-secondary text-white" style="font-size: 10px;">${e.cbfcRating}</span>` : ''}
+                        ${e.genre && e.genre.length > 0 ? `<span class="text-muted text-truncate" style="font-size: 11px;">${e.genre.join('/')}</span>` : ''}
                     </div>
                 </div>
             </div>
@@ -626,6 +626,34 @@ function showCinemaSelection(eventId) {
     const titleEl = document.getElementById('selected-event-title');
     if(titleEl) titleEl.innerText = event.title; 
     
+    const detailsBar = document.getElementById('selected-event-details-bar');
+    if(detailsBar) {
+        let genreHtml = '';
+        if (event.genre && event.genre.length > 0) {
+            genreHtml = event.genre.map(g => `<span class="badge bg-secondary border border-secondary text-white">${g}</span>`).join('');
+        }
+
+        let cbfcHtml = event.cbfcRating ? `<span class="badge bg-light text-dark fw-bold">${event.cbfcRating}</span>` : '';
+        let timeHtml = event.screenTime ? `<span class="badge bg-dark border border-secondary text-light">⏱️ ${event.screenTime}</span>` : '';
+        let catHtml = event.category ? `<span class="badge bg-dark border border-secondary text-light">${event.category}</span>` : '';
+        
+        const minPrice = event.locations && event.locations.length > 0 
+            ? Math.min(...event.locations.map(l => l.price)) 
+            : 0;
+        const displayPrice = Number(minPrice).toFixed(2);
+        const priceHtml = `<div class="mt-3"><span class="text-muted" style="font-size:12px;">Starting from</span><span class="fw-bold fs-5 text-brand ms-2">₹${displayPrice}</span></div>`;
+
+        detailsBar.innerHTML = `
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                ${cbfcHtml}
+                ${catHtml}
+                ${timeHtml}
+                ${genreHtml}
+            </div>
+            ${event.description ? `<p class="text-muted small mb-0 lh-lg">${event.description}</p>` : ''}
+            ${priceHtml}
+        `;
+    }
     switchView('action-section');
     document.getElementById('seated-view')?.classList.add('d-none');
     document.getElementById('general-view')?.classList.add('d-none');
@@ -689,7 +717,11 @@ safeBind('events-container', 'click', async (e) => {
 });
 
 async function triggerStandardEventSelection(eventData, locationData) {
-    const requiredAge = parseInt(eventData.ageLimit || 0);
+    let requiredAge = parseInt(eventData.ageLimit || 0);
+    if (eventData.cbfcRating === 'U/A 7+') requiredAge = 7;
+    else if (eventData.cbfcRating === 'U/A 13+') requiredAge = 13;
+    else if (eventData.cbfcRating === 'U/A 16+') requiredAge = 16;
+    else if (eventData.cbfcRating === 'A') requiredAge = 18;
     currentEventType = eventData.eventType;
     currentEventPrice = parseFloat(locationData.price || 0); 
     currentLocationId = locationData._id;

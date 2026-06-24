@@ -383,12 +383,12 @@ async function loadEvents() {
             let badgeClass = e.eventType === 'Seated' ? 'bg-info text-dark' : 'bg-warning text-dark';
             
             let ratingBadge = '';
-            if(e.ageLimit === 0) ratingBadge = `<span class="badge bg-success ms-2">U</span>`;
-            else if(e.ageLimit === 7) ratingBadge = `<span class="badge bg-info text-dark ms-2">UA 7+</span>`;
-            else if(e.ageLimit === 13) ratingBadge = `<span class="badge bg-warning text-dark ms-2">UA 13+</span>`;
-            else if(e.ageLimit === 16) ratingBadge = `<span class="badge bg-warning text-dark ms-2">UA 16+</span>`;
-            else if(e.ageLimit === 18) ratingBadge = `<span class="badge bg-danger ms-2">A</span>`;
-            else if(e.ageLimit === 99) ratingBadge = `<span class="badge bg-dark ms-2">S</span>`;
+            if(e.cbfcRating === 'U') ratingBadge = `<span class="badge bg-success ms-2">U</span>`;
+            else if(e.cbfcRating === 'U/A 7+') ratingBadge = `<span class="badge bg-info text-dark ms-2">U/A 7+</span>`;
+            else if(e.cbfcRating === 'U/A 13+') ratingBadge = `<span class="badge bg-warning text-dark ms-2">U/A 13+</span>`;
+            else if(e.cbfcRating === 'U/A 16+') ratingBadge = `<span class="badge bg-warning text-dark ms-2">U/A 16+</span>`;
+            else if(e.cbfcRating === 'A') ratingBadge = `<span class="badge bg-danger ms-2">A</span>`;
+            else if(e.cbfcRating) ratingBadge = `<span class="badge bg-secondary ms-2">${e.cbfcRating}</span>`;
 
             let catColor = 'bg-secondary text-white';
             if (e.category === 'Movie') catColor = 'bg-primary bg-opacity-25 text-primary border border-primary border-opacity-25';
@@ -652,9 +652,14 @@ eventForm.addEventListener('submit', async (e) => {
         return;
     }
 
+    const genreSelect = document.getElementById('event-genre');
+    const selectedGenres = Array.from(genreSelect.selectedOptions).map(opt => opt.value);
+
     const payload = {
         title: document.getElementById('event-title').value,
-        ageLimit: parseInt(document.getElementById('event-age').value), 
+        cbfcRating: document.getElementById('event-cbfcRating').value, 
+        genre: selectedGenres,
+        screenTime: document.getElementById('event-screentime').value,
         eventType: document.getElementById('event-type').value,
         category: document.getElementById('event-category').value, 
         locations: locations,
@@ -704,7 +709,14 @@ window.deleteEvent = async function(id) {
 window.editEvent = function(eventData) {
     eventIdInput.value = eventData._id;
     document.getElementById('event-title').value = eventData.title;
-    document.getElementById('event-age').value = eventData.ageLimit || 0;
+    document.getElementById('event-cbfcRating').value = eventData.cbfcRating || 'U';
+    
+    const genreSelect = document.getElementById('event-genre');
+    Array.from(genreSelect.options).forEach(opt => {
+        opt.selected = eventData.genre && eventData.genre.includes(opt.value);
+    });
+
+    document.getElementById('event-screentime').value = eventData.screenTime || '';
     document.getElementById('event-type').value = eventData.eventType;
     document.getElementById('event-category').value = eventData.category || 'Movie'; 
     document.getElementById('event-description').value = eventData.description || '';
@@ -738,6 +750,11 @@ window.resetEventForm = function() {
     eventForm.reset();
     eventIdInput.value = '';
     document.getElementById('event-image').value = '';
+    document.getElementById('event-cbfcRating').value = 'U';
+    document.getElementById('event-screentime').value = '';
+    const genreSelect = document.getElementById('event-genre');
+    Array.from(genreSelect.options).forEach(opt => opt.selected = false);
+    
     formTitle.innerHTML = '✨ Create New Event';
     submitBtn.innerText = 'Publish Event';
     submitBtn.classList.replace('btn-warning', 'btn-success');

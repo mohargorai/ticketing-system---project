@@ -15,9 +15,11 @@ const locationSchema = new mongoose.Schema({
 const eventSchema = new mongoose.Schema({
     title: { type: String, required: true },
     description: { type: String, default: '' },
-    ageLimit: { type: Number, default: 0 }, 
+    cbfcRating: { type: String, default: 'U' },
+    genre: [{ type: String }],
+    screenTime: { type: String, default: '' },
     eventType: { type: String, enum: ['Seated', 'General'], required: true },
-    category: { type: String, enum: ['Movie', 'Concert', 'Sports', 'Theater'], default: 'Movie' },
+    category: { type: String, enum: ['Movie', 'Concert', 'Sports', 'Theater', 'Standup Comedy', 'Exhibition'], default: 'Movie' },
     imageUrl: { type: String, default: '' }, 
     ticketsSold: { type: Number, default: 0 }, 
     locations: [locationSchema],
