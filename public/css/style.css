@@ -696,3 +696,5 @@ button[data-bs-toggle="collapse"][aria-expanded="true"] svg {
         right: 15px;
     }
 }
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
