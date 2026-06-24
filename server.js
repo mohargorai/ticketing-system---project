@@ -484,6 +484,15 @@ app.put('/api/admin/events/:id', requireAdmin, async (req, res) => {
                 return loc;
             });
         }
+        const oldEvent = await Event.findById(req.params.id);
+        if (oldEvent && oldEvent.locations) {
+            const newLocIds = (p.locations || []).filter(l => l._id).map(l => l._id.toString());
+            const removedLocIds = oldEvent.locations.map(l => l._id.toString()).filter(id => !newLocIds.includes(id));
+            if (removedLocIds.length > 0) {
+                await Seat.deleteMany({ eventId: req.params.id, locationId: { $in: removedLocIds } });
+            }
+        }
+
         await Event.findByIdAndUpdate(req.params.id, p); clearEventsCache(); io.emit('eventUpdate'); io.emit('dashboardUpdate'); res.json({ success: true, message: "Updated." }); 
     } catch (err) { res.status(500).json({ success: false, message: "Error" }); }
 });

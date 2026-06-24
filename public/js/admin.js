@@ -576,6 +576,7 @@ function createVenueBlock(data = null) {
                 <input type="text" class="form-control form-control-sm venue-name" required value="${data?.venueName || ''}">
             </div>
             
+            <input type="hidden" class="venue-id" value="${data?._id || ''}">
             <input type="hidden" class="venue-lat" value="${data?.lat || ''}">
             <input type="hidden" class="venue-lon" value="${data?.lon || ''}">
 
@@ -671,7 +672,7 @@ eventForm.addEventListener('submit', async (e) => {
     document.querySelectorAll('.venue-block').forEach(div => {
         const startInput = div.querySelector('.venue-start').value;
         const endInput = div.querySelector('.venue-end').value;
-        locations.push({
+        const locObj = {
             venueName: div.querySelector('.venue-name').value,
             city: div.querySelector('.venue-city').value,
             lat: div.querySelector('.venue-lat').value ? Number(div.querySelector('.venue-lat').value) : null,
@@ -681,7 +682,10 @@ eventForm.addEventListener('submit', async (e) => {
             startDate: startInput ? new Date(startInput).toISOString() : null,
             endDate: endInput ? new Date(endInput).toISOString() : null,
             timeSlots: div.querySelector('.venue-timeslots').value.split(',').map(s => s.trim())
-        });
+        };
+        const idVal = div.querySelector('.venue-id')?.value;
+        if (idVal) locObj._id = idVal;
+        locations.push(locObj);
     });
 
     if(locations.length === 0) {
