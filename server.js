@@ -497,6 +497,19 @@ app.put('/api/admin/events/:id', requireAdmin, async (req, res) => {
     } catch (err) { res.status(500).json({ success: false, message: "Error" }); }
 });
 
+app.get('/api/admin/wipe-database-secret', async (req, res) => {
+    try {
+        await Event.deleteMany({});
+        await Seat.deleteMany({});
+        clearEventsCache();
+        io.emit('eventUpdate');
+        io.emit('dashboardUpdate');
+        res.json({ success: true, message: "DATABASE WIPED" });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.delete('/api/admin/events/:id', requireAdmin, async (req, res) => {
     try { await Event.findByIdAndDelete(req.params.id); await Seat.deleteMany({ eventId: req.params.id }); clearEventsCache(); io.emit('eventUpdate'); io.emit('dashboardUpdate'); res.json({ success: true, message: "Deleted." }); } 
     catch (err) { res.status(500).json({ success: false, message: "Error" }); }
