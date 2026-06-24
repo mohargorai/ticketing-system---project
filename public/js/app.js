@@ -549,7 +549,7 @@ async function renderEvents() {
 
     if (allEvents.length === 0) {
         container.innerHTML = Array(6).fill(`
-            <div class="col-md-4">
+            <div class="col-6 col-md-4 col-lg-3">
                 <div class="card event-card h-100 skeleton-card">
                     <div class="skeleton-img"></div>
                     <div class="card-body p-4 d-flex flex-column gap-3">
@@ -605,7 +605,7 @@ function displayEvents(events) {
         let groupClass = (e.locations && e.locations.length > 1) ? 'grouped-movie-card' : '';
 
         return `
-        <div class="col-md-4">
+        <div class="col-6 col-md-4 col-lg-3">
             <div class="card event-card h-100 ${groupClass} ${isExpired ? 'expired-card' : ''}" ${dataAttrs} style="display: flex; flex-direction: column;">
                 <div class="position-relative">${imgHtml}</div>
                 <div class="card-body d-flex flex-column p-4 flex-grow-1">
