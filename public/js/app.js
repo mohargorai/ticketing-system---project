@@ -641,7 +641,7 @@ function showCinemaSelection(eventId) {
             ? Math.min(...event.locations.map(l => l.price)) 
             : 0;
         const displayPrice = Number(minPrice).toFixed(2);
-        const priceHtml = `<div class="mt-3"><span class="text-muted" style="font-size:12px;">Starting from</span><span class="fw-bold fs-5 text-brand ms-2">₹${displayPrice}</span></div>`;
+        const priceHtml = `<div class="mt-3"><span id="details-bar-price-label" class="text-muted" style="font-size:12px;">Starting from</span><span id="details-bar-price-value" class="fw-bold fs-5 text-brand ms-2">₹${displayPrice}</span></div>`;
 
         detailsBar.innerHTML = `
             <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
@@ -658,6 +658,7 @@ function showCinemaSelection(eventId) {
     document.getElementById('seated-view')?.classList.add('d-none');
     document.getElementById('general-view')?.classList.add('d-none');
     document.getElementById('date-selection-container')?.classList.add('d-none');
+    document.getElementById('checkout-col')?.classList.add('d-none');
     
     const cinemaContainer = document.getElementById('cinema-selection-container');
     const cinemaPills = document.getElementById('cinema-pills');
@@ -742,9 +743,15 @@ async function triggerStandardEventSelection(eventData, locationData) {
     const titleEl = document.getElementById('selected-event-title');
     if(titleEl) titleEl.innerText = `${eventData.title} @ ${locationData.venueName}`; 
     
+    const priceLabelEl = document.getElementById('details-bar-price-label');
+    if(priceLabelEl) priceLabelEl.innerText = "Price";
+    const priceValueEl = document.getElementById('details-bar-price-value');
+    if(priceValueEl) priceValueEl.innerText = `₹${parseFloat(locationData.price || 0).toFixed(2)}`;
+    
     switchView('action-section');
     document.getElementById('seated-view')?.classList.add('d-none');
     document.getElementById('general-view')?.classList.add('d-none');
+    document.getElementById('checkout-col')?.classList.add('d-none');
     
     const dates = getNextFourDays();
     const datesContainer = document.getElementById('date-pills');
@@ -850,6 +857,7 @@ async function loadEventDataForDateAndTime(date, time, isSoftUpdate = false) {
         
         const gView = document.getElementById('general-view');
         const sView = document.getElementById('seated-view');
+        document.getElementById('checkout-col')?.classList.remove('d-none');
 
         if (currentEventType === 'Seated') {
             if(gView) gView.classList.add('d-none'); 
