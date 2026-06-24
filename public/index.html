@@ -172,7 +172,10 @@
                 </div>
                 
                 <div id="date-selection-container" class="card border-0 p-4 mb-4 d-none w-100 position-relative">
-                    <button class="btn btn-sm btn-outline-secondary position-absolute" style="top: 15px; right: 15px;" onclick="showCinemaSelection(currentEventId)">← Back to Venues</button>
+                    <button class="btn btn-info rounded-pill px-3 py-2 fw-bold position-absolute shadow-sm text-dark d-flex align-items-center gap-2 transition-all hover-scale" style="top: 15px; right: 15px; font-size: 13px;" onclick="showCinemaSelection(currentEventId)">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/></svg>
+                        Back to Venues
+                    </button>
                     <h6 class="fw-bold text-muted text-uppercase mb-3" style="font-size: 12px; letter-spacing: 1px;">Select Date & Time</h6>
                     
                     <div id="date-pills" class="district-date-container m-0 border-0"></div>
@@ -216,8 +219,13 @@
                 </div>
             </div>
             
-            <div class="col-lg-4 d-none" id="checkout-col">
-                <div class="order-summary shadow-lg mobile-sticky-action-bar" id="mobile-checkout-bar">
+            <div class="col-lg-4" id="right-side-panel">
+                <div id="event-poster-col" class="d-none w-100 position-sticky" style="top: 20px;">
+                    <img id="event-poster-display" src="" class="img-fluid rounded-4 shadow-lg w-100" style="object-fit: cover; border: 2px solid var(--border-color); max-height: 600px;" alt="Event Poster">
+                </div>
+                
+                <div class="d-none" id="checkout-col">
+                    <div class="order-summary shadow-lg mobile-sticky-action-bar" id="mobile-checkout-bar">
                     <div class="d-flex justify-content-between align-items-center mb-4 d-none d-lg-flex">
                         <h5 class="fw-bold m-0 text-white">Order Summary</h5>
                     </div>

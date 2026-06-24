@@ -660,6 +660,18 @@ function showCinemaSelection(eventId) {
     document.getElementById('date-selection-container')?.classList.add('d-none');
     document.getElementById('checkout-col')?.classList.add('d-none');
     
+    // Show Poster
+    const posterCol = document.getElementById('event-poster-col');
+    const posterImg = document.getElementById('event-poster-display');
+    if (posterCol && posterImg) {
+        if (event.imageUrl) {
+            posterImg.src = event.imageUrl;
+            posterCol.classList.remove('d-none');
+        } else {
+            posterCol.classList.add('d-none');
+        }
+    }
+    
     const cinemaContainer = document.getElementById('cinema-selection-container');
     const cinemaPills = document.getElementById('cinema-pills');
     if(cinemaContainer) cinemaContainer.classList.remove('d-none');
@@ -752,6 +764,11 @@ async function triggerStandardEventSelection(eventData, locationData) {
     document.getElementById('seated-view')?.classList.add('d-none');
     document.getElementById('general-view')?.classList.add('d-none');
     document.getElementById('checkout-col')?.classList.add('d-none');
+    
+    const posterCol = document.getElementById('event-poster-col');
+    if (posterCol && eventData.imageUrl) {
+        posterCol.classList.remove('d-none');
+    }
     
     const dates = getNextFourDays();
     const datesContainer = document.getElementById('date-pills');
@@ -858,6 +875,7 @@ async function loadEventDataForDateAndTime(date, time, isSoftUpdate = false) {
         const gView = document.getElementById('general-view');
         const sView = document.getElementById('seated-view');
         document.getElementById('checkout-col')?.classList.remove('d-none');
+        document.getElementById('event-poster-col')?.classList.add('d-none');
 
         if (currentEventType === 'Seated') {
             if(gView) gView.classList.add('d-none'); 
