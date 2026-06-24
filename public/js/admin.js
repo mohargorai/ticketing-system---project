@@ -201,6 +201,12 @@ document.getElementById('event-poster-file').addEventListener('change', function
 
             const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
             document.getElementById('event-image').value = compressedBase64;
+            
+            const preview = document.getElementById('event-poster-preview');
+            if (preview) {
+                preview.src = compressedBase64;
+                preview.classList.remove('d-none');
+            }
         };
         img.src = event.target.result;
     };
@@ -754,6 +760,17 @@ window.editEvent = function(eventData) {
     document.getElementById('event-description').value = eventData.description || '';
     document.getElementById('event-image').value = eventData.imageUrl || ''; 
     document.getElementById('event-poster-file').value = ''; 
+    
+    const preview = document.getElementById('event-poster-preview');
+    if (preview) {
+        if (eventData.imageUrl) {
+            preview.src = eventData.imageUrl;
+            preview.classList.remove('d-none');
+        } else {
+            preview.src = '';
+            preview.classList.add('d-none');
+        }
+    }
 
     venuesContainer.innerHTML = '';
     if (eventData.locations && eventData.locations.length > 0) {
@@ -782,6 +799,13 @@ window.resetEventForm = function() {
     eventForm.reset();
     eventIdInput.value = '';
     document.getElementById('event-image').value = '';
+    
+    const preview = document.getElementById('event-poster-preview');
+    if (preview) {
+        preview.src = '';
+        preview.classList.add('d-none');
+    }
+    
     document.getElementById('event-cbfcRating').value = 'U';
     document.getElementById('event-screentime').value = '';
     
