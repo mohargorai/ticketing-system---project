@@ -552,10 +552,9 @@ async function renderEvents() {
             <div class="col-6 col-sm-4 col-md-3 col-lg-2">
                 <div class="card event-card h-100 skeleton-card">
                     <div class="skeleton-img"></div>
-                    <div class="card-body p-4 d-flex flex-column gap-3">
+                    <div class="card-body p-3 d-flex flex-column gap-2">
                         <div class="skeleton-text w-75"></div>
                         <div class="skeleton-text w-50"></div>
-                        <div class="skeleton-text w-100 mt-auto" style="height: 40px; border-radius: 999px;"></div>
                     </div>
                 </div>
             </div>
@@ -608,14 +607,11 @@ function displayEvents(events) {
         <div class="col-6 col-sm-4 col-md-3 col-lg-2">
             <div class="card event-card h-100 ${groupClass} ${isExpired ? 'expired-card' : ''}" ${dataAttrs} style="display: flex; flex-direction: column;">
                 <div class="position-relative">${imgHtml}</div>
-                <div class="card-body d-flex flex-column p-4 flex-grow-1">
-                    <h5 class="fw-bold mb-1 text-white">${e.title}</h5>
-                    <p class="text-muted small mb-3" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 40px;">${e.description || 'Experience the ultimate event.'}</p>
-                    <div class="d-flex gap-2 mb-3"><span class="badge bg-dark border border-secondary ${typeColor}">${typeIcon} ${e.eventType}</span>${catBadge}</div>
-                    <p class="small text-muted mb-3">📍 ${e.locations && e.locations.length > 0 ? (e.locations.length === 1 ? e.locations[0].venueName : `${e.locations.length} Locations Available`) : 'Venue TBA'}</p>
-                    <div class="d-flex justify-content-between align-items-end mt-auto pt-3 border-top" style="border-color: #262626 !important;">
-                        <div><span class="text-muted d-block" style="font-size:11px;">Starting from</span><span class="fw-bold fs-5 text-white">₹${displayPrice}</span></div>
-                        <button class="btn ${btnState} fw-bold px-4 rounded-3 book-now-btn">${btnText}</button>
+                <div class="card-body d-flex flex-column p-3 flex-grow-1 gap-1">
+                    <h6 class="fw-bold mb-0 text-white text-truncate" title="${e.title}">${e.title}</h6>
+                    <div class="d-flex flex-wrap gap-2 mt-2">
+                        <span class="badge bg-dark border border-secondary ${typeColor}">${typeIcon} ${e.eventType}</span>
+                        ${catBadge}
                     </div>
                 </div>
             </div>
