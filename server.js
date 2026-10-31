@@ -13,11 +13,23 @@ const { Server } = require('socket.io');
 const compression = require('compression'); 
 const redis = require('redis'); 
 const mongoSanitize = require('express-mongo-sanitize'); 
+const rateLimit = require('express-rate-limit'); 
 require('dotenv').config();                 
 
 const User = require('./models/User'); 
 const Event = require('./models/Event');
 const Seat = require('./models/Seat');
+const authService = require('./services/authService');
+const {
+    validateAuth,
+    signupSchema,
+    adminSignupSchema,
+    loginSchema,
+    forgotPasswordSchema,
+    resetPasswordSchema,
+    changePasswordSchema,
+    profileUpdateSchema
+} = require('./middleware/authValidation');
 
 const app = express();
 const server = http.createServer(app);      
@@ -60,7 +72,29 @@ const clearEventsCache = async () => {
     }
 };
 
+// Initialize Auth Service with Redis client reference
+authService.initAuthService({
+    redisClient,
+    isRedisConnected: () => isRedisConnected
+});
+
+// Rate limit login endpoint to max 10 requests per IP per minute
+const loginRateLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 minute
+    max: 10, // max 10 requests per IP per minute
+    standardHeaders: true,
+    legacyHeaders: false,
+    statusCode: 429,
+    message: { success: false, message: "Too many login attempts. Please try again after a minute." }
+});
+
 app.set('trust proxy', 1); 
+app.use((req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    next();
+});
 app.use(compression()); 
 app.use(express.json({ limit: '50mb' })); 
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
@@ -119,48 +153,121 @@ const requireAdmin = (req, res, next) => {
 };
 
 // --- AUTH ROUTES ---
-app.post('/api/signup', async (req, res) => {
+app.post('/api/signup', validateAuth(signupSchema), async (req, res) => {
     try {
-        const { username, password } = req.body;
-        if (!username || !password) return res.status(400).json({ success: false, message: "Fields required." });
-        const existingUser = await User.findOne({ username: { $regex: new RegExp(`^${username.trim()}$`, 'i') } }).lean();
-        if (existingUser) return res.status(400).json({ success: false, message: "Username is already taken. Please try another." });
-        await User.create({ username: username.trim(), password: await bcrypt.hash(password, 10), isAdmin: false });
-        io.emit('dashboardUpdate'); res.json({ success: true, message: "Account created!" });
-    } catch (err) { res.status(500).json({ success: false, message: "Server error." }); }
-});
+        const { username, password, email, fullName, displayName } = req.body;
+        
+        const orConditions = [{ username: { $regex: new RegExp(`^${username.trim()}$`, 'i') } }];
+        if (email) {
+            orConditions.push({ email: { $regex: new RegExp(`^${email.trim()}$`, 'i') } });
+        }
 
-// TEMPORARY DB WIPE ROUTE
-app.get('/api/nuke-db', async (req, res) => {
-    try {
-        await Event.deleteMany({});
-        await Seat.deleteMany({});
-        await User.updateMany({}, { $set: { bookedTickets: [] } });
-        res.send("<h1>Database completely wiped!</h1><p>All events, seats, and booked tickets have been cleared.</p><a href='/admin.html'>Go back to Admin Dashboard</a>");
+        const existingUser = await User.findOne({ $or: orConditions }).lean();
+        if (existingUser) {
+            // Rule: Registration must NOT confirm whether an email or username already exists
+            return res.status(400).json({ success: false, message: "Unable to complete registration with the provided details." });
+        }
+
+        const hashedPassword = await authService.hashPassword(password);
+        await User.create({
+            username: username.trim(),
+            email: email ? email.trim().toLowerCase() : '',
+            fullName: fullName || displayName || '',
+            password: hashedPassword,
+            isAdmin: false
+        });
+
+        io.emit('dashboardUpdate');
+        res.json({ success: true, message: "Account created! Please sign in." });
     } catch (err) {
-        res.status(500).send("Error wiping database: " + err.message);
+        res.status(500).json({ success: false, message: "Unable to complete registration with the provided details." });
     }
 });
 
-app.post('/api/admin/signup', async (req, res) => {
+app.post('/api/admin/signup', validateAuth(adminSignupSchema), async (req, res) => {
     try {
         const { username, password, secretKey } = req.body;
-        if (secretKey !== process.env.ADMIN_SECRET) return res.status(403).json({ success: false, message: "Invalid Secret Key." });
+        if (!process.env.ADMIN_SECRET || secretKey !== process.env.ADMIN_SECRET) {
+            return res.status(403).json({ success: false, message: "Invalid request." });
+        }
+
         const existingUser = await User.findOne({ username: { $regex: new RegExp(`^${username.trim()}$`, 'i') } }).lean();
-        if (existingUser) return res.status(400).json({ success: false, message: "Username is already taken. Please try another." });
-        await User.create({ username: username.trim(), password: await bcrypt.hash(password, 10), isAdmin: true });
-        io.emit('dashboardUpdate'); res.json({ success: true, message: "Admin account created." });
-    } catch (err) { res.status(500).json({ success: false, message: "Server error." }); }
+        if (existingUser) {
+            // Rule: Registration must NOT confirm whether an account already exists
+            return res.status(400).json({ success: false, message: "Unable to complete registration with the provided details." });
+        }
+
+        const hashedPassword = await authService.hashPassword(password);
+        await User.create({
+            username: username.trim(),
+            password: hashedPassword,
+            isAdmin: true
+        });
+
+        io.emit('dashboardUpdate');
+        res.json({ success: true, message: "Admin account created." });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Unable to complete registration with the provided details." });
+    }
 });
 
-app.post('/api/login', async (req, res) => {
+app.post('/api/login', loginRateLimiter, validateAuth(loginSchema), async (req, res) => {
     try {
-        const user = await User.findOne({ username: { $regex: new RegExp(`^${req.body.username.trim()}$`, 'i') } }).lean();
-        if (!user) return res.status(404).json({ success: false, notFound: true, message: "User not found." });
-        if (!(await bcrypt.compare(req.body.password, user.password))) return res.status(401).json({ success: false, message: "Incorrect password." });
-        req.session.userId = user._id; req.session.username = user.username; req.session.isAdmin = user.isAdmin;
+        const { username, password } = req.body;
+        const result = await authService.authenticateUser(
+            username,
+            password,
+            req.get('host'),
+            req.protocol
+        );
+
+        if (!result.success) {
+            // Rule: Login failures (wrong email OR wrong password) must return exactly: "Incorrect email or password"
+            // Rule: Account lockout must NOT mention it's a lockout - return the same generic message
+            return res.status(401).json({ success: false, message: "Incorrect email or password" });
+        }
+
+        const user = result.user;
+        req.session.userId = user._id;
+        req.session.username = user.username;
+        req.session.isAdmin = user.isAdmin;
+
         res.json({ success: true, username: user.username, isAdmin: user.isAdmin });
-    } catch (err) { res.status(500).json({ success: false, message: "Server error." }); }
+    } catch (err) {
+        res.status(401).json({ success: false, message: "Incorrect email or password" });
+    }
+});
+
+app.post('/api/forgot-password', validateAuth(forgotPasswordSchema), async (req, res) => {
+    try {
+        const { email } = req.body;
+        const result = await authService.generatePasswordReset(email, req.get('host'), req.protocol);
+        res.json(result);
+    } catch (err) {
+        res.json({ success: true, message: "If that email is registered, you'll receive a reset link" });
+    }
+});
+
+app.post('/api/reset-password', validateAuth(resetPasswordSchema), async (req, res) => {
+    try {
+        const { token, newPassword } = req.body;
+        const result = await authService.resetPasswordWithToken(token, newPassword);
+        if (!result.success) return res.status(400).json(result);
+        res.json(result);
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Unable to reset password." });
+    }
+});
+
+app.post('/api/change-password', verifyActiveUser, validateAuth(changePasswordSchema), async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        const result = await authService.changePassword(req.session.userId, currentPassword, newPassword);
+        if (!result.success) return res.status(400).json(result);
+        res.json(result);
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Unable to update password." });
+    }
 });
 
 app.post('/api/logout', (req, res) => { req.session.destroy(); res.json({ success: true }); });
@@ -175,10 +282,19 @@ app.get('/api/check-session', async (req, res) => {
 
 app.get('/api/profile', verifyActiveUser, async (req, res) => { res.json({ success: true, user: await User.findById(req.session.userId).select('-password').lean() }); });
 
-app.put('/api/profile', verifyActiveUser, async (req, res) => {
+app.put('/api/profile', verifyActiveUser, validateAuth(profileUpdateSchema), async (req, res) => {
     try {
-        const user = await User.findByIdAndUpdate(req.session.userId, req.body, {new: true});
-        req.session.username = user.username; res.json({ success: true, message: "Profile updated!", newUsername: user.username });
+        const { fullName, phone, dob, address } = req.body;
+        const updates = {};
+        if (fullName !== undefined) updates.fullName = fullName;
+        if (phone !== undefined) updates.phone = phone;
+        if (dob !== undefined) updates.dob = dob ? new Date(dob) : null;
+        if (address !== undefined) updates.address = address;
+
+        const user = await User.findByIdAndUpdate(req.session.userId, { $set: updates }, { new: true }).select('-password');
+        res.json({ success: true, message: "Profile updated!", user });
+
+
     } catch (err) { res.status(500).json({ success: false, message: "Error updating profile." }); }
 });
 
@@ -427,10 +543,10 @@ app.get('/api/admin/users', requireAdmin, async (req, res) => { res.json(await U
 app.put('/api/admin/users/:id/role', requireAdmin, async (req, res) => {
     try {
         const { secretKey } = req.body;
-        if (secretKey !== process.env.ADMIN_SECRET) return res.status(403).json({ success: false, message: "Invalid Secret Key." });
+        if (!process.env.ADMIN_SECRET || secretKey !== process.env.ADMIN_SECRET) return res.status(403).json({ success: false, message: "Invalid Secret Key." });
         
         const user = await User.findById(req.params.id);
-        if (!user) return res.status(404).json({ success: false, message: "User not found." });
+        if (!user) return res.status(404).json({ success: false, message: "Account not found." });
         
         user.isAdmin = !user.isAdmin;
         await user.save();

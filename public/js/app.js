@@ -227,8 +227,9 @@ safeBind('auth-form', 'submit', async (e) => {
                 passEl.value = '';
             }
         } else {
-            if (data.notFound && isLoginMode) { if (confirm(data.message)) setupAuthMode(false); } 
-            else alert(data.message || 'Error occurred');
+            alert(data.message || 'Error occurred');
+
+
         }
     } catch (err) { alert("Server error. Please try again."); }
 });
@@ -1226,7 +1227,7 @@ safeBind('nav-bookings-link', 'click', async (e) => {
 
         if (tickets.length === 0) { 
             container.innerHTML = '<p class="text-muted p-4 border border-secondary rounded">You have no booked tickets yet.</p>'; 
-            return; 
+
         }
 
         const grouped = tickets.reduce((acc, t) => {

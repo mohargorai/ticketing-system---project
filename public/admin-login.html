@@ -154,7 +154,7 @@
                     await fetch('/api/logout', { method: 'POST' }); 
                 }
             } else {
-                alert(data.message || 'Invalid credentials.');
+                alert(data.message || 'Incorrect email or password');
             }
         } else {
             const res = await fetch('/api/admin/signup', {
