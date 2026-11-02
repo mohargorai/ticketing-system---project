@@ -131,10 +131,21 @@ function applyProgressiveDelay(attemptCount) {
 }
 
 /**
- * Hashes a plain-text password using bcrypt with at least 12 salt rounds.
+ * Applies HMAC-SHA256 pepper to plain password using server-side secret key.
+ * This guarantees passwords cannot be cracked from a leaked database dump without the server secret,
+ * and normalizes password input to a 64-character hex digest (preventing bcrypt's 72-byte truncation limit).
+ */
+function pepperPassword(plainPassword) {
+    const pepper = process.env.PASSWORD_PEPPER || 'default-system-pepper-secret-key-32chars';
+    return crypto.createHmac('sha256', pepper).update(String(plainPassword)).digest('hex');
+}
+
+/**
+ * Hashes a plain-text password using HMAC-SHA256 pepper + bcrypt with at least 12 salt rounds.
  */
 async function hashPassword(plainPassword) {
-    return bcrypt.hash(plainPassword, BCRYPT_ROUNDS);
+    const peppered = pepperPassword(plainPassword);
+    return bcrypt.hash(peppered, BCRYPT_ROUNDS);
 }
 
 /**
@@ -166,8 +177,9 @@ async function authenticateUser(identifier, password, reqHost = 'localhost:3000'
     });
 
     if (!user) {
-        // Prevent timing attack: run dummy comparison
-        await bcrypt.compare(password, DUMMY_HASH);
+        // Prevent timing attack: run dummy comparison with peppered dummy
+        const peppered = pepperPassword(password);
+        await bcrypt.compare(peppered, DUMMY_HASH);
         
         attemptRecord.count = (attemptRecord.count || 0) + 1;
         await saveAttemptRecord(identifier, attemptRecord);
@@ -181,9 +193,22 @@ async function authenticateUser(identifier, password, reqHost = 'localhost:3000'
     let needsRehash = false;
 
     if (isBcryptHash(user.password)) {
-        passwordMatches = await bcrypt.compare(password, user.password);
-        if (passwordMatches && getBcryptRounds(user.password) < BCRYPT_ROUNDS) {
-            needsRehash = true;
+        // A. Verify with peppered password first
+        const peppered = pepperPassword(password);
+        passwordMatches = await bcrypt.compare(peppered, user.password);
+
+        if (passwordMatches) {
+            if (getBcryptRounds(user.password) < BCRYPT_ROUNDS) {
+                needsRehash = true;
+            }
+        } else {
+            // B. Backward compatibility: check without pepper (legacy bcrypt hash)
+            const legacyMatch = await bcrypt.compare(password, user.password);
+            if (legacyMatch) {
+                passwordMatches = true;
+                needsRehash = true; // Upgrade to peppered hash
+                console.info(`[AUTH_PEPPER_MIGRATION] Transparently upgraded un-peppered password to peppered bcrypt-12 for user ID: ${user._id}`);
+            }
         }
     } else if (/^[a-f0-9]{32}$/i.test(user.password)) {
         // Legacy MD5 Hash
@@ -320,10 +345,15 @@ async function resetPasswordWithToken(rawToken, newPassword) {
 async function changePassword(userId, currentPassword, newPassword) {
     const user = await User.findById(userId);
     if (!user) {
-        return { success: false, message: "User not found." };
+        return { success: false, message: "Account not found." };
     }
 
-    const match = await bcrypt.compare(currentPassword, user.password);
+    // Check with pepper first, then fallback to unpeppered
+    let match = await bcrypt.compare(pepperPassword(currentPassword), user.password);
+    if (!match) {
+        match = await bcrypt.compare(currentPassword, user.password);
+    }
+
     if (!match) {
         return { success: false, message: "Incorrect current password." };
     }
@@ -336,6 +366,7 @@ async function changePassword(userId, currentPassword, newPassword) {
 
 module.exports = {
     initAuthService,
+    pepperPassword,
     hashPassword,
     authenticateUser,
     generatePasswordReset,

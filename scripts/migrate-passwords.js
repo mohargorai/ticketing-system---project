@@ -11,6 +11,7 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
+const authService = require('../services/authService');
 
 const DB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/ticketingDB';
 const BCRYPT_ROUNDS = 12;
@@ -53,11 +54,11 @@ async function runMigration() {
             pendingNextLoginCount++;
         } else {
             // Plain text password detected - directly rehash to bcrypt-12
-            console.log(`🚨 User [${user.username}]: PLAIN TEXT password detected! Re-hashing to bcrypt (salt rounds = ${BCRYPT_ROUNDS})...`);
-            user.password = await bcrypt.hash(pass, BCRYPT_ROUNDS);
+            console.log(`🚨 User [${user.username}]: PLAIN TEXT password detected! Re-hashing with pepper to bcrypt (salt rounds = ${BCRYPT_ROUNDS})...`);
+            user.password = await authService.hashPassword(pass);
             await user.save();
             upgradedPlaintextCount++;
-            console.log(`✅ User [${user.username}]: Successfully migrated to bcrypt-12.`);
+            console.log(`✅ User [${user.username}]: Successfully migrated to peppered bcrypt-12.`);
         }
     }
 

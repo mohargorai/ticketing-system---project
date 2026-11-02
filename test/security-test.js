@@ -69,23 +69,31 @@ async function runTests() {
     assert(sentJson.message === 'Invalid input provided.', 'Validation failure returns generic message without disclosing field');
 
     // ==========================================
-    // 2. PASSWORD HASHING (BCRYPT 12) & MIGRATION
+    // 2. PASSWORD HASHING (BCRYPT 12 + PEPPER) & MIGRATION
     // ==========================================
-    console.log('\n--- Test Suite 2: Password Storage, Hashing & Migration ---');
+    console.log('\n--- Test Suite 2: Password Storage, Pepper, Hashing & Migration ---');
 
-    // 2.1 Hash uses at least 12 salt rounds
+    // 2.1 Pepper generation & 72-byte normalization
+    const pepperedDigest = authService.pepperPassword('MySecurePassword123');
+    assert(typeof pepperedDigest === 'string' && pepperedDigest.length === 64, 'Pepper produces 64-character HMAC-SHA256 digest');
+
+    // 2.2 Hash uses at least 12 salt rounds
     const testHash = await authService.hashPassword('MySecurePassword123');
     const rounds = authService.getBcryptRounds(testHash);
     assert(rounds >= 12, `Password hashed with bcrypt salt rounds >= 12 (actual: ${rounds})`);
 
-    // 2.2 Constant-time comparison works
-    const isMatch = await bcrypt.compare('MySecurePassword123', testHash);
-    assert(isMatch === true, 'Constant-time bcrypt.compare validates correct password');
+    // 2.3 Constant-time comparison with pepper works
+    const isMatch = await bcrypt.compare(pepperedDigest, testHash);
+    assert(isMatch === true, 'Bcrypt compares successfully with peppered password');
 
-    const isWrongMatch = await bcrypt.compare('WrongPassword123', testHash);
-    assert(isWrongMatch === false, 'bcrypt.compare safely rejects incorrect password');
+    // 2.4 Unpeppered password fails against peppered hash (demonstrating database leak protection)
+    const isUnpepperedMatch = await bcrypt.compare('MySecurePassword123', testHash);
+    assert(isUnpepperedMatch === false, 'Raw unpeppered password fails against peppered hash (db dump protection)');
 
-    // 2.3 Password round detection
+    const isWrongMatch = await bcrypt.compare(authService.pepperPassword('WrongPassword123'), testHash);
+    assert(isWrongMatch === false, 'Bcrypt safely rejects incorrect password');
+
+    // 2.5 Password round detection
     const tenRoundHash = await bcrypt.hash('legacyPass123', 10);
     assert(authService.getBcryptRounds(tenRoundHash) === 10, 'Detects legacy bcrypt rounds = 10');
 
