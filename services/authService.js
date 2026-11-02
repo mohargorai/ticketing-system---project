@@ -131,12 +131,28 @@ function applyProgressiveDelay(attemptCount) {
 }
 
 /**
- * Applies HMAC-SHA256 pepper to plain password using server-side secret key.
+ * Retrieves the pepper secret strictly from environment variables.
+ * In production, it immediately throws an error if PASSWORD_PEPPER is missing.
+ */
+function getPepper() {
+    const pepper = process.env.PASSWORD_PEPPER;
+    if (!pepper) {
+        if (process.env.NODE_ENV === 'production') {
+            throw new Error('FATAL SECURITY CONFIGURATION: PASSWORD_PEPPER must be set in your environment variables (.env).');
+        }
+        console.warn('⚠️ [SECURITY WARNING] PASSWORD_PEPPER is missing in .env! Please define it in your .env file.');
+        return 'dev-only-fallback-key-do-not-use-in-production';
+    }
+    return pepper;
+}
+
+/**
+ * Applies HMAC-SHA256 pepper to plain password using server-side secret key from .env.
  * This guarantees passwords cannot be cracked from a leaked database dump without the server secret,
  * and normalizes password input to a 64-character hex digest (preventing bcrypt's 72-byte truncation limit).
  */
 function pepperPassword(plainPassword) {
-    const pepper = process.env.PASSWORD_PEPPER || 'default-system-pepper-secret-key-32chars';
+    const pepper = getPepper();
     return crypto.createHmac('sha256', pepper).update(String(plainPassword)).digest('hex');
 }
 
